@@ -1,5 +1,4 @@
 #include "my_lib.h"
-#include <string.h>
 
 /*La función strcmp() compara las cadenas apuntadas por str1 y str2.
 Devuelve un entero, en función de su código ASCII:
