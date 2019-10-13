@@ -64,3 +64,22 @@ char *my_strcat(char *dest, const char *src){
     }    
     return dest;
 }
+
+// ########### Aventura 2 ########### //
+
+int my_stack_push (struct my_stack *stack, void *data){
+
+    struct my_stack_node *nodo;
+    nodo = malloc(sizeof(data));
+
+    if(stack->first==NULL){ // verifica si la pila está vacía
+        nodo->data = data;
+        nodo->next = NULL;
+    }else{
+        void *aux;
+        aux = nodo->next;
+        nodo->next = stack->first;
+        stack -> first = aux;
+        nodo = data;
+    }
+} 
