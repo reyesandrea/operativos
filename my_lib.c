@@ -80,19 +80,24 @@ struct my_stack *my_stack_init(int size) {
     return stack;
 }
 
-int my_stack_push (struct my_stack *stack, void *data){
-
+/**
+ * Añade un nodo a la pila.
+ * @param stack
+ * @param data
+ * @return 0 si se ha añadido ó -1 si ha ocurrido un error
+ */
+int my_stack_push(struct my_stack *stack, void *data) {
+    if (!stack) return -1;  // Verifica si la pila no ha sido instanciada.
     struct my_stack_node *nodo;
     nodo = malloc(sizeof(data));
+    nodo->data = data;
 
-    if(stack->first==NULL){ // verifica si la pila está vacía
-        nodo->data = data;
+    if (stack->first == NULL) { // Verifica si la pila está vacía
         nodo->next = NULL;
-    }else{
-        void *aux;
-        aux = nodo->next;
+        stack->first = nodo;
+    } else {
         nodo->next = stack->first;
-        stack -> first = aux;
-        nodo = data;
+        stack->first = nodo;
     }
-} 
+    return 0;
+}
