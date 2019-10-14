@@ -91,13 +91,7 @@ int my_stack_push(struct my_stack *stack, void *data) {
     struct my_stack_node *nodo;
     nodo = malloc(sizeof(data));
     nodo->data = data;
-
-    if (stack->first == NULL) { // Verifica si la pila está vacía
-        nodo->next = NULL;
-        stack->first = nodo;
-    } else {
-        nodo->next = stack->first;
-        stack->first = nodo;
-    }
+    nodo->next = stack->first;
+    stack->first = nodo;
     return 0;
 }
