@@ -67,6 +67,19 @@ char *my_strcat(char *dest, const char *src){
 
 // ########### Aventura 2 ########### //
 
+/**
+ * Inicializa y devuelve una pila de tamaño `size`.
+ * @param size Tamaño de los datos de la pila
+ * @return
+ */
+struct my_stack *my_stack_init(int size) {
+    struct my_stack *stack;
+    stack = malloc(sizeof(int) + 8);
+    stack->size = size;
+    stack->first = NULL;
+    return stack;
+}
+
 int my_stack_push (struct my_stack *stack, void *data){
 
     struct my_stack_node *nodo;
