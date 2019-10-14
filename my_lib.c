@@ -96,3 +96,18 @@ int my_stack_push (struct my_stack *stack, void *data){
         nodo = data;
     }
 } 
+
+void *my_stack_pop(struct my_stack *stack){
+	
+    struct my_stack_node *borrar;
+
+    if(stack->first==NULL){ //Verifica si la pila está vacia
+		return NULL;            
+    }
+    else{
+        borrar = stack->first;
+        stack -> first = stack -> first -> next;
+        return borrar -> data;
+    }        
+    
+}
