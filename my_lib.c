@@ -1,5 +1,7 @@
 #include "my_lib.h"
 
+int helper(struct my_stack_node *node, int fd, int counter);
+
 /*La función strcmp() compara las cadenas apuntadas por str1 y str2.
 Devuelve un entero, en función de su código ASCII:
 < 0 indica que str1 < str2.
@@ -126,6 +128,38 @@ void *my_stack_pop(struct my_stack *stack){
         return borrar -> data;
     }        
 }
+
+/**
+ * Escribe los nodos de la pila en un fichero.
+ * @param stack
+ * @param filename
+ * @return número de nodos escrito o -1 si se produce un error;
+ */
+int my_stack_write(struct my_stack *stack, char *filename) {
+    if (stack == NULL) return -1;
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IWUSR);
+    if (fd != -1) {
+        write(fd, &stack->size, sizeof(int));
+        return helper(stack->first, fd, 0);
+    }
+    return -1;
+}
+
+/**
+ * Función recursiva usada por my_stack_write para recorrer y escribir los nodos de una pila
+ * en un fichero.
+ * @param node
+ * @param fd
+ * @param counter
+ * @return Número de nodos escritos o -1 si se produce un error;
+ */
+int helper(struct my_stack_node *node, int fd, int counter) {
+    if (node == NULL) return counter;
+    int c = helper(node->next, fd, counter + 1);
+    if (write(fd, node->data, sizeof(node)) == -1) return -1;
+    return c;
+}
+
 //struct my_stack *my_stack_read(char *filename); Ruben
 //int my_stack_write(struct my_stack *stack, char *filename); Luis
 //int my_stack_purge(struct my_stack *stack); Andrea
