@@ -113,7 +113,7 @@ int my_stack_push(struct my_stack *stack, void *data) {
     stack->first = nodo;
     return 0;
 } 
-
+//POP
 void *my_stack_pop(struct my_stack *stack){
 	
     struct my_stack_node *borrar;
@@ -127,6 +127,22 @@ void *my_stack_pop(struct my_stack *stack){
         stack -> first = stack -> first -> next;
         return borrar -> data;
     }        
+}
+//LEN
+int my_stack_len (struct my_stack *stack){
+
+    int len = 0;
+    struct my_stack_node *punt = stack->first;
+
+	//Si la pila no está vacía, la recorremos incrementando el contador
+    if (stack->first != NULL){
+		while (punt->next!=NULL){
+		len++;
+        punt = punt -> next;
+		}
+	len++;
+    }
+    return len;
 }
 
 /**
