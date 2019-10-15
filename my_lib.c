@@ -74,7 +74,7 @@ char *my_strcat(char *dest, const char *src){
  */
 struct my_stack *my_stack_init(int size) {
     struct my_stack *stack;
-    stack = malloc(sizeof(int) + 8);
+    stack = malloc(sizeof(int) + sizeof(struct my_stack*));
     stack->size = size;
     stack->first = NULL;
     return stack;
