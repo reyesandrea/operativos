@@ -90,7 +90,7 @@ char *my_strcat(char *dest, const char *src){
  */
 struct my_stack *my_stack_init(int size) {
     struct my_stack *stack;
-    stack = malloc(sizeof(int) + 8);
+    stack = malloc(sizeof(int) + sizeof(struct my_stack*));
     stack->size = size;
     stack->first = NULL;
     return stack;
@@ -121,7 +121,11 @@ void *my_stack_pop(struct my_stack *stack){
     }
     else{
         borrar = stack->first;
+	//free(borrar);
         stack -> first = stack -> first -> next;
         return borrar -> data;
     }        
 }
+//struct my_stack *my_stack_read(char *filename); Ruben
+//int my_stack_write(struct my_stack *stack, char *filename); Luis
+//int my_stack_purge(struct my_stack *stack); Andrea
