@@ -110,3 +110,6 @@ void *my_stack_pop(struct my_stack *stack){
         return borrar -> data;
     }        
 }
+//struct my_stack *my_stack_read(char *filename); Ruben
+//int my_stack_write(struct my_stack *stack, char *filename); Luis
+//int my_stack_purge(struct my_stack *stack); Andrea
