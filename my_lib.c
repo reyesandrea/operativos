@@ -7,10 +7,26 @@ Devuelve un entero, en función de su código ASCII:
 = 0 indica que str1 = str2.
 */
 int my_strcmp(const char *str1, const char *str2){
-    int num1 = *(str1);
-    int num2 = *(str2);
-      
-  return num1 -num2;
+    int r=3,i=0;
+    size_t len1, len2;
+    len1 = my_strlen(str1);
+    len2 = my_strlen(str2);
+    printf("Longitud de 1: %ld \n",len1);
+    printf("Longitud de 2: %ld \n",len2);
+    printf("%d \n", str1[2]);
+    while (i!= (len1-1)|| i!=(len2-1))
+    {
+        if(str1[i]==str2[i]){
+            r=0;
+        }
+        else if(str1[i]<str2[i]){
+            return r=-1;
+        }else{
+            return r=1;
+        }
+        i++;
+    } 
+    return r;
 }
 /*La función calcula el nº de bytes de la cadena apuntada por str, 
 sin incluir el carácter nulo de terminación ‘\0’.
