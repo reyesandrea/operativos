@@ -105,6 +105,7 @@ void *my_stack_pop(struct my_stack *stack){
     }
     else{
         borrar = stack->first;
+	//free(borrar);
         stack -> first = stack -> first -> next;
         return borrar -> data;
     }        
