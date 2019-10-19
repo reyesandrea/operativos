@@ -13,9 +13,6 @@ int my_strcmp(const char *str1, const char *str2){
     size_t len1, len2;
     len1 = my_strlen(str1);
     len2 = my_strlen(str2);
-    printf("Longitud de 1: %ld \n",len1);
-    printf("Longitud de 2: %ld \n",len2);
-    printf("%d \n", str1[2]);
     while (i!= (len1-1)|| i!=(len2-1))
     {
         if(str1[i]==str2[i]){
@@ -202,7 +199,6 @@ struct my_stack *my_stack_read(char *filename){
     aux = my_stack_init(size);
     data= malloc(size);
     while (read(op, data, size)>0) {
-        printf("%d\n", ((int *) data)[0]);
         my_stack_push(aux, data);
         data = malloc(size);
     }
