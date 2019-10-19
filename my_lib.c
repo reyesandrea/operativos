@@ -176,6 +176,36 @@ int helper(struct my_stack_node *node, int fd, int counter) {
     return c;
 }
 
+//READ
+struct my_stack *my_stack_read(char *filename){
+
+	void *data ;
+	int op = 0; 
+	int rd = 0;
+	int size;
+    	struct my_stack *aux=NULL;
+
+	//Primero abrimos el fichero
+	op = open(filename, O_RDONLY);
+	if(op == -1){
+	return NULL;
+    }
+
+    //Iniciamos el porceso de lectura si no está vacío
+    rd = read(op, &size, sizeof(int));
+    if(rd == -1){
+        return NULL;
+    }
+    aux = my_stack_init(size);
+    data= malloc(size);
+    while (read(op, data, sizeof(struct my_stack_node))>0) {
+        my_stack_push(aux, data);
+        data = malloc(size);
+    }
+    close(op);
+    return aux;
+}
+
 //struct my_stack *my_stack_read(char *filename); Ruben
 //int my_stack_write(struct my_stack *stack, char *filename); Luis
 //int my_stack_purge(struct my_stack *stack); Andrea
