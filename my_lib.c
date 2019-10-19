@@ -1,6 +1,6 @@
 #include "my_lib.h"
 
-int helper(struct my_stack_node *node, int fd, int counter);
+int helper(struct my_stack_node *node, int size, int fd, int counter);
 
 /*La función strcmp() compara las cadenas apuntadas por str1 y str2.
 Devuelve un entero, en función de su código ASCII:
@@ -27,10 +27,10 @@ int my_strcmp(const char *str1, const char *str2){
             return r=1;
         }
         i++;
-    } 
+    }
     return r;
 }
-/*La función calcula el nº de bytes de la cadena apuntada por str, 
+/*La función calcula el nº de bytes de la cadena apuntada por str,
 sin incluir el carácter nulo de terminación ‘\0’.
 Devuelve la longitud de str. No devuelve error.*/
 size_t my_strlen(const char *str){
@@ -54,18 +54,18 @@ char *my_strcpy(char *dest, const char *src){
     return dest;
 }
 
-/*La función strncpy() copia n caracteres de la cadena apuntada 
+/*La función strncpy() copia n caracteres de la cadena apuntada
 por src (con el carácter de terminación ‘\0’) en la memoria apuntada por dest.*/
 char *my_strncpy(char *dest, const char *src, size_t n){
     int i = 0;
-    for(i=0; i<=my_strlen(src)+1 && i<n;i++){ 
+    for(i=0; i<=my_strlen(src)+1 && i<n;i++){
         dest[i]= src[i];
     }
     while(i<= n){
         dest[i]=0;
         i++;
     }
-    
+
     return dest;
 }
 
@@ -79,7 +79,7 @@ char *my_strcat(char *dest, const char *src){
             dest[j]=src[i];
             i++;
         }
-    }    
+    }
     return dest;
 }
 
@@ -112,21 +112,22 @@ int my_stack_push(struct my_stack *stack, void *data) {
     nodo->next = stack->first;
     stack->first = nodo;
     return 0;
-} 
+}
 //POP
 void *my_stack_pop(struct my_stack *stack){
-	
+
     struct my_stack_node *borrar;
 
     if(stack->first==NULL){ //Verifica si la pila está vacia
-		return NULL;            
+        return NULL;
     }
     else{
         borrar = stack->first;
-	//free(borrar);
+        void * data = borrar->data;
         stack -> first = stack -> first -> next;
-        return borrar -> data;
-    }        
+        free(borrar);
+        return data;
+    }
 }
 //LEN
 int my_stack_len (struct my_stack *stack){
@@ -134,13 +135,13 @@ int my_stack_len (struct my_stack *stack){
     int len = 0;
     struct my_stack_node *punt = stack->first;
 
-	//Si la pila no está vacía, la recorremos incrementando el contador
+    //Si la pila no está vacía, la recorremos incrementando el contador
     if (stack->first != NULL){
-		while (punt->next!=NULL){
-		len++;
-        punt = punt -> next;
-		}
-	len++;
+        while (punt->next!=NULL){
+            len++;
+            punt = punt -> next;
+        }
+        len++;
     }
     return len;
 }
@@ -156,7 +157,9 @@ int my_stack_write(struct my_stack *stack, char *filename) {
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IWUSR);
     if (fd != -1) {
         write(fd, &stack->size, sizeof(int));
-        return helper(stack->first, fd, 0);
+        int r = helper(stack->first, stack->size, fd, 0);
+        close(fd);
+        return r;
     }
     return -1;
 }
@@ -169,26 +172,26 @@ int my_stack_write(struct my_stack *stack, char *filename) {
  * @param counter
  * @return Número de nodos escritos o -1 si se produce un error;
  */
-int helper(struct my_stack_node *node, int fd, int counter) {
+int helper(struct my_stack_node *node, int size, int fd, int counter) {
     if (node == NULL) return counter;
-    int c = helper(node->next, fd, counter + 1);
-    if (write(fd, node->data, sizeof(node)) == -1) return -1;
+    int c = helper(node->next, size, fd, counter + 1);
+    if (write(fd, node->data, size) == -1) return -1;
     return c;
 }
 
 //READ
 struct my_stack *my_stack_read(char *filename){
 
-	void *data ;
-	int op = 0; 
-	int rd = 0;
-	int size;
-    	struct my_stack *aux=NULL;
+    void *data ;
+    int op = 0;
+    int rd = 0;
+    int size;
+    struct my_stack *aux=NULL;
 
-	//Primero abrimos el fichero
-	op = open(filename, O_RDONLY);
-	if(op == -1){
-	return NULL;
+    //Primero abrimos el fichero
+    op = open(filename, O_RDONLY);
+    if(op == -1){
+        return NULL;
     }
 
     //Iniciamos el porceso de lectura si no está vacío
@@ -198,7 +201,8 @@ struct my_stack *my_stack_read(char *filename){
     }
     aux = my_stack_init(size);
     data= malloc(size);
-    while (read(op, data, sizeof(struct my_stack_node))>0) {
+    while (read(op, data, size)>0) {
+        printf("%d\n", ((int *) data)[0]);
         my_stack_push(aux, data);
         data = malloc(size);
     }
