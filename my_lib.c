@@ -1,8 +1,17 @@
+/*
+    ### AVENTURA 1 ###
+    Squad: LRAOS
+    Miembros: 
+        Camino, Lluís 
+        López, Rubén
+        Reyes, Andrea
+*/
+
 #include "my_lib.h"
 
 int helper(struct my_stack_node *node, int size, int fd, int counter);
 
-/*La función strcmp() compara las cadenas apuntadas por str1 y str2.
+/* La función strcmp() compara las cadenas apuntadas por str1 y str2.
 Devuelve un entero, en función de su código ASCII:
 < 0 indica que str1 < str2.
 > 0 indica que str2 < str1.
@@ -27,9 +36,12 @@ int my_strcmp(const char *str1, const char *str2){
     }
     return r;
 }
-/*La función calcula el nº de bytes de la cadena apuntada por str,
+
+/* 
+La función my_strlen() calcula el nº de bytes de la cadena apuntada por str,
 sin incluir el carácter nulo de terminación ‘\0’.
-Devuelve la longitud de str. No devuelve error.*/
+Devuelve la longitud de str. No devuelve error.
+*/
 size_t my_strlen(const char *str){
     int cont = 0;
     while (str[cont]!='\0'){
@@ -39,8 +51,8 @@ size_t my_strlen(const char *str){
 }
 
 /*
-La función copia la cadena apuntada por src (con el carácter de terminación ‘\0’)
-en la memoria apuntada por dest.
+La función my_strcpy() copia la cadena apuntada por src (con el carácter
+de terminación ‘\0’) en la memoria apuntada por dest.
 Devuelve el puntero dest. No devuelve error.
 */
 char *my_strcpy(char *dest, const char *src){
@@ -51,8 +63,10 @@ char *my_strcpy(char *dest, const char *src){
     return dest;
 }
 
-/*La función strncpy() copia n caracteres de la cadena apuntada
-por src (con el carácter de terminación ‘\0’) en la memoria apuntada por dest.*/
+/*
+La función strncpy() copia n caracteres de la cadena apuntada
+por src (con el carácter de terminación ‘\0’) en la memoria apuntada por dest.
+*/
 char *my_strncpy(char *dest, const char *src, size_t n){
     int i = 0;
     for(i=0; i<=my_strlen(src)+1 && i<n;i++){
@@ -66,7 +80,9 @@ char *my_strncpy(char *dest, const char *src, size_t n){
     return dest;
 }
 
-/*La función strcat() añade la cadena apuntada por src a la cadena apuntada por dest*/
+/*
+La función strcat() añade la cadena apuntada por src a la cadena apuntada por dest
+*/
 char *my_strcat(char *dest, const char *src){
     int i = 0, j=0;
     /*Bucle en el que recorremos dest buscando el primer caracter nulo, al encontrarlo,
@@ -80,7 +96,7 @@ char *my_strcat(char *dest, const char *src){
     return dest;
 }
 
-// ########### Aventura 2 ########### //
+
 
 /**
  * Inicializa y devuelve una pila de tamaño `size`.
@@ -110,7 +126,12 @@ int my_stack_push(struct my_stack *stack, void *data) {
     stack->first = nodo;
     return 0;
 }
-//POP
+
+/**
+ * Elimina el nodo superior de la pila y libera la memoria que ocupaba ese nodo.
+ * @param stack
+ * @return data (puntero a los datos del elemento eliminado) 
+ */
 void *my_stack_pop(struct my_stack *stack){
 
     struct my_stack_node *borrar;
@@ -126,7 +147,12 @@ void *my_stack_pop(struct my_stack *stack){
         return data;
     }
 }
-//LEN
+
+/**
+ * Cuenta la cantidad total de nodos que hay en la pila
+ * @param stack
+ * @return len (número de nodos totales que hay en la pila)
+ */
 int my_stack_len (struct my_stack *stack){
 
     int len = 0;
@@ -176,7 +202,11 @@ int helper(struct my_stack_node *node, int size, int fd, int counter) {
     return c;
 }
 
-//READ
+/**
+ * Función que lee los datos de la pila almacenados en el fichero 
+ * @param filename
+ * @return NULL si hubo error
+ */
 struct my_stack *my_stack_read(char *filename){
 
     void *data ;
@@ -206,6 +236,17 @@ struct my_stack *my_stack_read(char *filename){
     return aux;
 }
 
-//struct my_stack *my_stack_read(char *filename); Ruben
-//int my_stack_write(struct my_stack *stack, char *filename); Luis
-//int my_stack_purge(struct my_stack *stack); Andrea
+/**
+ * Libera la memoria reservada.
+ * @param stack
+ * @return nº de bytes liberados
+ */
+int my_stack_purge(struct my_stack *stack){
+    int cont = 0, nbyteslib, i;
+    int lon = my_stack_len(stack);
+    for(i=0;i<lon && stack->first!=NULL;i++){
+        void *j = my_stack_pop(stack);
+        cont++;
+    }
+    return nbyteslib = cont*sizeof(struct my_stack_node)+ sizeof(struct my_stack);
+}
