@@ -96,7 +96,7 @@ char *my_strcat(char *dest, const char *src){
     return dest;
 }
 
-
+/* ##### GESTOR DE PILAS ##### */
 
 /**
  * Inicializa y devuelve una pila de tamaño `size`.
@@ -246,6 +246,7 @@ int my_stack_purge(struct my_stack *stack){
     int lon = my_stack_len(stack);
     for(i=0;i<lon && stack->first!=NULL;i++){
         void *j = my_stack_pop(stack);
+        free(j);
         cont++;
     }
     return nbyteslib = cont*sizeof(struct my_stack_node)+ sizeof(struct my_stack);
