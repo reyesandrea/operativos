@@ -249,5 +249,7 @@ int my_stack_purge(struct my_stack *stack){
         free(j);
         cont++;
     }
-    return nbyteslib = cont*sizeof(struct my_stack_node)+ sizeof(struct my_stack);
+    int result = nbyteslib = cont*(sizeof(struct my_stack_node) + stack->size) + sizeof(struct my_stack);
+    free(stack);
+    return result;
 }
