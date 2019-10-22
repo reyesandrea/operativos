@@ -37,8 +37,9 @@ int internal_jobs(char **args);
 int imprimir_prompt(){
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
-   printf(ROJO_T"%s:~"MAGENTA_T"%s%c ", getenv("USER"),dir,PROMPT);
-   //printf("PATH : %s\n", getenv("PATH"));
+    printf(VERDE_T"%s:~"CYAN_T"%s"RESET_COLOR"%c " , getenv("USER"),dir,PROMPT);
+    printf("\n");
+    fflush(stdout);
 }
 
 int main() {
