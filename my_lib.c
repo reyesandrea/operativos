@@ -177,7 +177,7 @@ int my_stack_len (struct my_stack *stack){
  */
 int my_stack_write(struct my_stack *stack, char *filename) {
     if (stack == NULL) return -1;
-    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IWUSR);
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd != -1) {
         write(fd, &stack->size, sizeof(int));
         int r = helper(stack->first, stack->size, fd, 0);
