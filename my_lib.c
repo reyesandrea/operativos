@@ -11,12 +11,14 @@
 
 int helper(struct my_stack_node *node, int size, int fd, int counter);
 
-/* La función strcmp() compara las cadenas apuntadas por str1 y str2.
-Devuelve un entero, en función de su código ASCII:
-< 0 indica que str1 < str2.
-> 0 indica que str2 < str1.
-= 0 indica que str1 = str2.
-*/
+/* 
+ * Compara dos cadenas de caracteres.
+ * @param str1 y str2
+ * @return:
+           -1 indica que str1 < str2.
+            1 indica que str2 < str1.
+            0 indica que str1 = str2.
+ */
 int my_strcmp(const char *str1, const char *str2){
     int r=3,i=0;
     size_t len1, len2;
@@ -38,10 +40,10 @@ int my_strcmp(const char *str1, const char *str2){
 }
 
 /* 
-La función my_strlen() calcula el nº de bytes de la cadena apuntada por str,
-sin incluir el carácter nulo de terminación ‘\0’.
-Devuelve la longitud de str. No devuelve error.
-*/
+ * Calcula el nº de bytes de una cadena.
+ * @param str
+ * @return: longitud
+ */
 size_t my_strlen(const char *str){
     int cont = 0;
     while (str[cont]!='\0'){
@@ -51,10 +53,10 @@ size_t my_strlen(const char *str){
 }
 
 /*
-La función my_strcpy() copia la cadena apuntada por src (con el carácter
-de terminación ‘\0’) en la memoria apuntada por dest.
-Devuelve el puntero dest. No devuelve error.
-*/
+ * Copia una cadena.
+ * @param dest, src
+ * @return: dest
+ */
 char *my_strcpy(char *dest, const char *src){
     int i = 0;
     for(i=0; i<=my_strlen(src)+1;i++){ //Cambiar esto por my_strlen
@@ -64,9 +66,10 @@ char *my_strcpy(char *dest, const char *src){
 }
 
 /*
-La función strncpy() copia n caracteres de la cadena apuntada
-por src (con el carácter de terminación ‘\0’) en la memoria apuntada por dest.
-*/
+ * Añade una parte de una cadena de caracteres a otra cadena
+ * @param dest src
+ * @return: dest
+ */
 char *my_strncpy(char *dest, const char *src, size_t n){
     int i = 0;
     for(i=0; i<=my_strlen(src)+1 && i<n;i++){
@@ -81,8 +84,10 @@ char *my_strncpy(char *dest, const char *src, size_t n){
 }
 
 /*
-La función strcat() añade la cadena apuntada por src a la cadena apuntada por dest
-*/
+ * Añade una cadena de caracteres a otra
+ * @param dest src
+ * @return: dest
+ */
 char *my_strcat(char *dest, const char *src){
     int i = 0, j=0;
     /*Bucle en el que recorremos dest buscando el primer caracter nulo, al encontrarlo,
