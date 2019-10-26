@@ -54,17 +54,26 @@ int imprimir_prompt(){
 }
 
 int main() {
-  
-  imprimir_prompt();
-  return 0;
+  char line[ARGS_SIZE];
+  char *aux = line; 
+  while (read_line(aux)){
+      execute_line(aux);
+  }
 
+  return 0;
 }
 
-// char *read_line(char *line); 
+char *read_line(char *line){
+  imprimir_prompt();
+  fgets(line, ARGS_SIZE, stdin);
+  return line;
+}
 
 int execute_line(char *line){
-  // dice que llama a parse_args() para obtener la linea fragmentada en tokens
-  // pero la funcion parse_args() devuelve un entero que es la cantidad de tokens
+    int i;
+    char *args[ARGS_SIZE];
+    i= parse_args(args, line);
+    i = check_internal(args);
 }
 
 int parse_args(char **args, char *line){
@@ -121,8 +130,8 @@ int check_internal(char **args){
 int my_strcmp(const char *str1, const char *str2){
     int r=3,i=0;
     size_t len1, len2;
-    len1 = my_strlen(str1);
-    len2 = my_strlen(str2);
+    len1 = strlen(str1);
+    len2 = strlen(str2);
     while (i!= (len1-1)|| i!=(len2-1))
     {
         if(str1[i]==str2[i]){
