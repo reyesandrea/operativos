@@ -99,17 +99,17 @@ int parse_args(char **args, char *line){
 int check_internal(char **args){
   int comp = my_strcmp(args, "cd"), r;
   if (comp == 0){
-    r = internal_cd(char args);
-  else{
+    r = internal_cd(args);
+  }else{
     comp = my_strcmp(args, "export");
     if (comp == 0){
-      r = internal_export(char args);
+      r = internal_export(args);
     }else{
       comp = my_strcmp(args, "source");
       if (comp == 0){
-        r = internal_source(char args);
+        r = internal_source(args);
       }else{
-        r = internal_jobs(char args);
+        r = internal_jobs(args);
       }
     }
   }
