@@ -48,7 +48,9 @@ int my_strcmp(const char *str1, const char *str2);
 int imprimir_prompt(){
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
-    printf(VERDE_T"%s:~"CYAN_T"%s"RESET_COLOR"%c " , getenv("USER"),dir,PROMPT);
+    char ESC = 27;
+    printf("%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR , ESC ,getenv("USER"),dir,PROMPT);
+    printf("%c[0m",ESC); /* turn off bold */
     printf("\n");
     fflush(stdout);
 }
