@@ -37,6 +37,7 @@
 #define BLANCO_F   "\x1b[47m"
 #pragma endregion
 
+void imprimir_prompt();
 char *read_line(char *line); 
 int execute_line(char *line);
 int parse_args(char **args, char *line);
@@ -45,9 +46,9 @@ int internal_cd(char **args);
 int internal_export(char **args); 
 int internal_source(char **args); 
 int internal_jobs(char **args); 
-int my_strcmp(const char *str1, const char *str2);
+int internal_cd(char **args); 
 
-int imprimir_prompt(){
+void imprimir_prompt() {
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
     char ESC = 27;
@@ -59,63 +60,58 @@ int imprimir_prompt(){
 
 int main() {
   char line[ARGS_SIZE];
-  char *aux = line; 
-  while (read_line(aux)){
-      execute_line(aux);
+  while (read_line(line)) {
+      execute_line(line);
   }
-
   return 0;
 }
 
-char *read_line(char *line){
+char *read_line(char *line) {
   imprimir_prompt();
   fgets(line, ARGS_SIZE, stdin);
   return line;
 }
 
-int execute_line(char *line){
-    int i;
+int execute_line(char *line) {
     char *args[ARGS_SIZE];
-    i= parse_args(args, line);
-    i = check_internal(args);
+    parse_args(args, line);
+    return check_internal(args);
 }
 
-int parse_args(char **args, char *line){
-  char str[] = read_line(line);
-  const char s[2] = "\t\n\r";
-  char token;
-  int i = 1;
-  token = strtok(str, s);
-  while( token != NULL ) { // añadir condición para que ignore comentarios
-    
-    /* ################################ */
-    printf("Token nº %d: %s\n", i, token); // esta línea se debe eliminar después
-    /* ################################ */
-
-    token = strtok(NULL, s);
-    i++;
-  }
-  return i-1;
-}
-
-int check_internal(char **args){
-  int comp = my_strcmp(args, "cd"), r;
-  if (comp == 0){
-    r = internal_cd(args);
-  }else{
-    comp = my_strcmp(args, "export");
-    if (comp == 0){
-      r = internal_export(args);
-    }else{
-      comp = my_strcmp(args, "source");
-      if (comp == 0){
-        r = internal_source(args);
-      }else{
-        r = internal_jobs(args);
-      }
+int parse_args(char **args, char *line) {
+  const char s[3]="\t\n ";
+  char * token;
+  token = strtok(line, s);
+  int i = 0;
+  while (token != NULL) {
+    if (token[0] != '#') {
+      args[i] = token;
+      i++;
     }
+    token = strtok(NULL, s);
   }
-  return r;
+  args[i] = token;
+  return i;
+}
+
+int check_internal(char **args) {
+  int comp = strcmp(*args, "cd");
+  if (comp == 0) {
+    return internal_cd(args);
+  }
+  comp = strcmp(*args, "export");
+  if (comp == 0) {
+    return internal_export(args);
+  }
+  comp = strcmp(*args, "source");
+  if (comp == 0) {
+    return internal_source(args);
+  }
+  comp = strcmp(*args, "jobs");
+  if (comp == 0) {
+    return internal_jobs(args);
+  }
+  return 0;
 }
 
 /* 
@@ -126,7 +122,7 @@ int check_internal(char **args){
  *          0: no ocurrieron errores en la ejecución
  *         -1: ocurrió un error durante la ejecucuón
  */
-int internal_cd(char **args){
+int internal_cd(char **args) {
   int r;
 
   /* ### Línea de test - Eliminar después ### */
@@ -146,37 +142,17 @@ int internal_cd(char **args){
   if (r==-1){
     fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
   }
-  
 }
 
-// int internal_export(char **args); 
-// int internal_source(char **args); 
-// int internal_jobs(char **args);
-
-/* 
- * Compara dos cadenas de caracteres.
- * @param str1 y str2
- * @return:
-           -1 indica que str1 < str2.
-            1 indica que str2 < str1.
-            0 indica que str1 = str2.
- */
-int my_strcmp(const char *str1, const char *str2){
-    int r=3,i=0;
-    size_t len1, len2;
-    len1 = strlen(str1);
-    len2 = strlen(str2);
-    while (i!= (len1-1)|| i!=(len2-1))
-    {
-        if(str1[i]==str2[i]){
-            r=0;
-        }
-        else if(str1[i]<str2[i]){
-            return r=-1;
-        }else{
-            return r=1;
-        }
-        i++;
-    }
-    return r;
+int internal_export(char **args) {
+  printf("Función export\n");
+  return 1;
+}
+int internal_source(char **args) {
+  printf("Función source\n");
+  return 1;
+}
+int internal_jobs(char **args) {
+  printf("Función Jobs\n");
+  return 1;
 }
