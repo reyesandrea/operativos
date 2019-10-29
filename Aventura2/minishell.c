@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h> //errno
+#include <string.h> //strerror()
 
 #pragma region //COLORES (Eliminar los que no se usen)
 #define RESET_COLOR    "\x1b[0m"
@@ -99,24 +101,54 @@ int parse_args(char **args, char *line){
 int check_internal(char **args){
   int comp = my_strcmp(args, "cd"), r;
   if (comp == 0){
-    r = internal_cd(char args);
+    r = internal_cd(args);
   else{
     comp = my_strcmp(args, "export");
     if (comp == 0){
-      r = internal_export(char args);
+      r = internal_export(args);
     }else{
       comp = my_strcmp(args, "source");
       if (comp == 0){
-        r = internal_source(char args);
+        r = internal_source(args);
       }else{
-        r = internal_jobs(char args);
+        r = internal_jobs(args);
       }
     }
   }
   return r;
 }
 
-// int internal_cd(char **args); 
+/* 
+ * Notifica la sintaxis correcta de la función utilizando
+ * la salida estandar de errores stderr.
+ * @param args
+ * @return:
+ *          0: no ocurrieron errores en la ejecución
+ *         -1: ocurrió un error durante la ejecucuón
+ */
+int internal_cd(char **args){
+  int r;
+
+  /* ### Línea de test - Eliminar después ### */
+  printf("%s \n"getcwd(s,180));
+  /* ################################ */
+
+  if (args==NULL){
+    r = chdir("HOME");
+  }else{
+    r = chdir(args);
+  }
+
+  /* ### Línea de test - Eliminar después ### */
+  printf("%s \n"getcwd(s,180));
+  /* ################################ */
+
+  if (r==-1){
+    fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+  }
+  
+}
+
 // int internal_export(char **args); 
 // int internal_source(char **args); 
 // int internal_jobs(char **args);
