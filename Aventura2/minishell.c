@@ -102,7 +102,7 @@ int check_internal(char **args){
   int comp = my_strcmp(args, "cd"), r;
   if (comp == 0){
     r = internal_cd(args);
-  else{
+  }else{
     comp = my_strcmp(args, "export");
     if (comp == 0){
       r = internal_export(args);
