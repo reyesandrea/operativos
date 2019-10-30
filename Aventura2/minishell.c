@@ -40,8 +40,7 @@
 void imprimir_prompt();
 char *read_line(char *line); 
 int execute_line(char *line);
-int 
-_args(char **args, char *line);
+int parse_args(char **args, char *line);
 int check_internal(char **args); 
 int internal_cd(char **args); 
 int internal_export(char **args); 
