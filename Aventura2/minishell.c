@@ -144,10 +144,35 @@ int internal_cd(char **args) {
   }
 }
 
-int internal_export(char **args) {
-  printf("Función export\n");
-  return 1;
-}
+
+int internal_export(char **args){
+  //Control de errores: sin argumentos despues de export
+  if(args[1] == NULL){
+    fprintf(stderr, "Error de sintaxis. Uso: export Nombre=Valor\n");
+    return -1;//error
+  }
+  //Separación en tokens de la instruccion
+  char *nom = strtok(args[1], "=");
+  char *val = strtok(NULL, " ");
+
+  //Control de errores: uso incorrecto de los argumentos contiguos a export
+  if(val == NULL){
+    fprintf(stderr, "Error de sintaxis. Uso: export Nombre=Valor\n");
+    return -1;//error
+  }
+
+  printf("[internal_export()→Esta función asignará valores a variables de entorno]\n");
+  printf("[internal_export()→ Nombre: %s]\n", nom);
+  printf("[internal_export()→ Valor: %s]\n",val);
+
+  printf("[internal_export()→ antiguo valor para %s: %s]\n", nom, getenv(nom));
+  setenv(nom, val, 1);     
+  printf("[internal_export()→ nuevo valor para %s: %s]\n",nom,getenv(nom) );
+
+  return 0;
+} 
+
+
 int internal_source(char **args) {
   printf("Función source\n");
   return 1;
