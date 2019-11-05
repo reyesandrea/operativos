@@ -94,29 +94,42 @@ int parse_args(char **args, char *line) {
   return i;
 }
 
+/* 
+ * Función booleana que averigua si args[0] se trata de un
+ * comando interno y llama a la función correspondiente para 
+ * tratarlo.
+ * @param args
+ * @return:
+ *          0: si no se trata de un comando interno
+ *          1: se ha ejecutado un comando interno
+ */
 int check_internal(char **args) {
-  int comp = strcmp(*args, "cd");
+  int comp = strcmp(args[0], "cd");
   if (comp == 0) {
-    return internal_cd(args);
+    return internal_cd(&args[0]);
   }
-  comp = strcmp(*args, "export");
+  comp = strcmp(args[0], "export");
   if (comp == 0) {
-    return internal_export(args);
+    return internal_export(&args[0]);
   }
-  comp = strcmp(*args, "source");
+  comp = strcmp(args[0], "source");
   if (comp == 0) {
-    return internal_source(args);
+    return internal_source(&args[0]);
   }
-  comp = strcmp(*args, "jobs");
+  comp = strcmp(args[0], "jobs");
   if (comp == 0) {
-    return internal_jobs(args);
+    return internal_jobs(&args[0]);
+  }
+  comp = strcmp(args[0], "exit");
+  if (comp == 0) {
+    exit(0);
   }
   return 0;
 }
 
 /* 
- * Notifica la sintaxis correcta de la función utilizando
- * la salida estandar de errores stderr.
+ * Función que notifica la sintaxis correcta de la instrucción
+ * utilizando la salida estandar de errores stderr.
  * @param args
  * @return:
  *          0: no ocurrieron errores en la ejecución
@@ -124,20 +137,29 @@ int check_internal(char **args) {
  */
 int internal_cd(char **args) {
   int r;
+  char s[180];
 
   /* ### Línea de test - Eliminar después ### */
-  printf("%s \n"getcwd(s,180));
+  printf("Ruta anterior: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
   /* ################################ */
 
-  if (args==NULL){
+  if (args[1]==NULL){
     r = chdir("HOME");
-  }else{
-    r = chdir(args);
-  }
 
-  /* ### Línea de test - Eliminar después ### */
-  printf("%s \n"getcwd(s,180));
-  /* ################################ */
+    /* ### Línea de test - Eliminar después ### */
+    printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
+    /* ################################ */
+
+    return r;
+  }else{
+    r = chdir(args[1]);
+    
+    /* ### Línea de test - Eliminar después ### */
+    printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
+    /* ################################ */
+
+    return r;
+  }
 
   if (r==-1){
     fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
@@ -161,7 +183,7 @@ int internal_export(char **args){
     return -1;//error
   }
 
-  printf("[internal_export()→Esta función asignará valores a variables de entorno]\n");
+  printf("[internal_export()→ Esta función asignará valores a variables de entorno]\n");
   printf("[internal_export()→ Nombre: %s]\n", nom);
   printf("[internal_export()→ Valor: %s]\n",val);
 
