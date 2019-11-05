@@ -11,6 +11,8 @@
 #define COMMAND_LINE_SIZE 1024
 #define ARGS_SIZE 64
 #define PROMPT '$'
+#define TRUE 1
+#define FALSE 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -75,13 +77,13 @@ int execute_line(char *line) {
     char *args[ARGS_SIZE];
     parse_args(args, line);
     int check = check_internal(args);
-    if (check == 0) { // Ejecutar comando externo
+    if (check == FALSE) { // Ejecutar comando externo
       pid_t pid = fork();
       if (pid == 0) { // Proceso hijo
         printf("[execute_line() → PID Hijo: %d]\n", getpid());
         if (execvp(args[0], args) == -1) {
           fprintf(stderr, "%s\n", strerror(errno));
-          exit(EXIT_FAILURE);
+          exit(FALSE);
         }
       } else if (pid > 0) { // Proceso padre
         printf("[execute_line() → PID Padre: %d]\n", getpid());
@@ -89,12 +91,18 @@ int execute_line(char *line) {
       } else {
         // Error
       }
-      return 0;
+      return TRUE;
     } else {
       return check;
     }
 }
 
+/**
+ * Divide una instrucción en tokens, que guarda en el 
+ * parámetro **args.
+ * @param args, line
+ * @return Número de tokens
+ */ 
 int parse_args(char **args, char *line) {
   const char s[4]="\t\n ";
   char * token;
@@ -117,8 +125,8 @@ int parse_args(char **args, char *line) {
  * tratarlo.
  * @param args
  * @return:
- *          0: si no se trata de un comando interno
- *          1: se ha ejecutado un comando interno
+ *          FALSE: si no se trata de un comando interno
+ *          TRUE: se ha ejecutado un comando interno
  */
 int check_internal(char **args) {
   int comp = strcmp(args[0], "cd");
@@ -141,7 +149,7 @@ int check_internal(char **args) {
   if (comp == 0) {
     exit(0);
   }
-  return 0;
+  return FALSE;
 }
 
 /* 
@@ -149,7 +157,7 @@ int check_internal(char **args) {
  * utilizando la salida estandar de errores stderr.
  * @param args
  * @return:
- *          0: no ocurrieron errores en la ejecución
+ *          TRUE: no ocurrieron errores en la ejecución
  *         -1: ocurrió un error durante la ejecucuón
  */
 int internal_cd(char **args) {
@@ -167,7 +175,7 @@ int internal_cd(char **args) {
     printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
     /* ################################ */
 
-    return r;
+    return r == 0 ? TRUE : -1;
   }else{
     r = chdir(args[1]);
     
@@ -175,7 +183,7 @@ int internal_cd(char **args) {
     printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
     /* ################################ */
 
-    return r;
+    return r == 0 ? TRUE : -1;
   }
 
   if (r==-1){
@@ -183,7 +191,14 @@ int internal_cd(char **args) {
   }
 }
 
-
+/**
+ * Comando interno export, define una variable de entorno.
+ * Sintaxis: export Nombre=Valor
+ * @param args
+ * @return:
+ *          TRUE: ejecución correcta
+ *          -1: error en la ejecución
+ */ 
 int internal_export(char **args){
   //Control de errores: sin argumentos despues de export
   if(args[1] == NULL){
@@ -208,15 +223,14 @@ int internal_export(char **args){
   setenv(nom, val, 1);     
   printf("[internal_export()→ nuevo valor para %s: %s]\n",nom,getenv(nom) );
 
-  return 1;
+  return TRUE;
 } 
-
 
 int internal_source(char **args) {
   printf("Función source\n");
-  return 1;
+  return TRUE;
 }
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
-  return 1;
+  return TRUE;
 }
