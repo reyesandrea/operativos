@@ -54,14 +54,13 @@ void imprimir_prompt() {
     char ESC = 27;
     printf("%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR , ESC ,getenv("USER"),dir,PROMPT);
     printf("%c[0m",ESC); /* turn off bold */
-    printf("\n");
     fflush(stdout);
 }
 
 int main() {
   char line[ARGS_SIZE];
   while (read_line(line)) {
-      execute_line(line);
+    execute_line(line);
   }
   return 0;
 }
@@ -75,7 +74,25 @@ char *read_line(char *line) {
 int execute_line(char *line) {
     char *args[ARGS_SIZE];
     parse_args(args, line);
-    return check_internal(args);
+    int check = check_internal(args);
+    if (check == 0) { // Ejecutar comando externo
+      pid_t pid = fork();
+      if (pid == 0) { // Proceso hijo
+        printf("[execute_line() → PID Hijo: %d]\n", getpid());
+        if (execvp(args[0], args) == -1) {
+          fprintf(stderr, "%s\n", strerror(errno));
+          exit(EXIT_FAILURE);
+        }
+      } else if (pid > 0) { // Proceso padre
+        printf("[execute_line() → PID Padre: %d]\n", getpid());
+        wait(NULL);
+      } else {
+        // Error
+      }
+      return 0;
+    } else {
+      return check;
+    }
 }
 
 int parse_args(char **args, char *line) {
