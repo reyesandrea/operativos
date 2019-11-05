@@ -169,7 +169,7 @@ int internal_export(char **args){
   setenv(nom, val, 1);     
   printf("[internal_export()→ nuevo valor para %s: %s]\n",nom,getenv(nom) );
 
-  return 0;
+  return 1;
 } 
 
 
