@@ -152,6 +152,7 @@ int check_internal(char **args) {
   return FALSE;
 }
 
+
 /* 
  * Función que notifica la sintaxis correcta de la instrucción
  * utilizando la salida estandar de errores stderr.
@@ -169,27 +170,32 @@ int internal_cd(char **args) {
   /* ################################ */
 
   if (args[1]==NULL){
-    r = chdir("HOME");
+    r = chdir(getenv("HOME"));
 
     /* ### Línea de test - Eliminar después ### */
     printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
     /* ################################ */
 
+    if (r==-1){
+      fprintf(stderr, "chdir: %s\n", strerror(errno));
+    }
+    
     return r == 0 ? TRUE : -1;
+
   }else{
     r = chdir(args[1]);
     
     /* ### Línea de test - Eliminar después ### */
     printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
     /* ################################ */
-
+    if (r==-1){
+      fprintf(stderr, "chdir: %s\n", strerror(errno));
+    }
     return r == 0 ? TRUE : -1;
   }
 
-  if (r==-1){
-    fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
-  }
 }
+
 
 /**
  * Comando interno export, define una variable de entorno.
@@ -226,10 +232,43 @@ int internal_export(char **args){
   return TRUE;
 } 
 
+
+/**
+ * Comando interno source, lee un fichero línea a línea
+ * Sintaxis: source <nombre_fichero>
+ * @param args
+ * @return:
+ *          0: ejecución correcta
+ *         -1: error en la ejecución
+ */ 
 int internal_source(char **args) {
+  FILE *fp;
+  char str[100];
+  int e;
   printf("Función source\n");
-  return TRUE;
+  if (args[1]==NULL){
+    fprintf(stderr, "Error de sintaxis. Uso: source <nombre_fichero>\n");
+    return -1;
+  }else{
+    fp = fopen(args[1], "r");   // se abre el fichero
+    if(fp==NULL){ // se comprueba que existe el fichero
+      fprintf(stderr, "fopen: %s\n", strerror(errno));
+      return -1;
+    }
+    while(fgets(str, 100, fp)){ // se lee el fichero línea a línea
+      e = execute_line(str);
+      fflush(stdin);  // se limpia el stream del fichero
+    }
+    e = fclose(fp);   // se cierra el fichero
+    if(e==-1){
+      fprintf(stderr, "fclose: %s\n", strerror(errno));
+      return e;
+    }
+  }
+  return(0);
 }
+
+
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
   return TRUE;
