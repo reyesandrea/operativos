@@ -265,7 +265,7 @@ int internal_source(char **args) {
       return e;
     }
   }
-  return(0);
+  return TRUE;
 }
 
 
