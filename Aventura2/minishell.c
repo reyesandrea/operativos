@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <errno.h> //errno
 #include <string.h> //strerror()
+#include <sys/types.h>
+#include <signal.h>
 
 #pragma region //COLORES (Eliminar los que no se usen)
 #define RESET_COLOR    "\x1b[0m"
@@ -49,6 +51,8 @@ int internal_export(char **args);
 int internal_source(char **args); 
 int internal_jobs(char **args); 
 int internal_cd(char **args); 
+void reaper(int signum);
+void ctrlc(int signum);
 
 void imprimir_prompt() {
     char dir [ARGS_SIZE];
@@ -61,6 +65,7 @@ void imprimir_prompt() {
 
 int main() {
   char line[ARGS_SIZE];
+  signal(SIGINT, ctrlc); // Asociación de la señal SIGINT
   while (read_line(line)) {
     execute_line(line);
   }
@@ -272,4 +277,34 @@ int internal_source(char **args) {
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
   return TRUE;
+}
+
+
+// void reaper(int signum){}  (Rubén)
+
+
+/**
+ * Función que actúa como un manejador propio para la 
+ * señal SIGINT (Ctrl+C)
+ * @param signum: número que identifica la señal recibida
+ **/
+void ctrlc(int signum){
+  signal(SIGINT, ctrlc);
+  char cm_line = "./minishell";
+  pid_t pid;
+  pid = getpid();
+  if(jobs_list[0].pid > 0){
+    if(cm_line!=args[0]){
+      if(kill(pid,SIGTERM)==0){
+        fprintf(stderr, "\nSeñal %d enviada al proceso %d", signum,  getpid());
+      }else{
+        perror("kill");
+        exit(-1);
+      }
+    }else{
+      fprintf("\nError: Señal SIGTERM no enviada debido a que el proceso en foreground es el shell");
+    }
+  }else{
+    fprintf("\nError: Señal SIGTERM no enviada debido a que no hay ningún proceso en foreground");
+  }
 }
