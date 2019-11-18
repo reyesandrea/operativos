@@ -65,6 +65,7 @@ void imprimir_prompt() {
 
 int main() {
   char line[ARGS_SIZE];
+  signal(SIGCHLD, reaper); 
   signal(SIGINT, ctrlc); // Asociación de la señal SIGINT
   while (read_line(line)) {
     execute_line(line);
@@ -280,7 +281,23 @@ int internal_jobs(char **args) {
 }
 
 
-// void reaper(int signum){}  (Rubén)
+void reaper(int signum){
+	signal(signum, reaper);
+	pid_t pid;
+	int status;
+	pid = waitpid(-1, &status, WNOHANG);
+	if(pid>0){//Si el hijo que acaba se ejecuta en primer plano, poner la variable jobs list a 0.
+  		jobs_list[0].pid=0;
+    	if(WIFEXITED(status)){
+        	printf("[reaper()→ Proceso hijo %d finalizado con exit code: %d]\n",pid, WEXITSTATUS(status));
+          
+    	} else if(WIFSIGNALED(status)){
+        	printf("[reaper()→ Proceso hijo %d finalizado por señal: %d]\n",pid, WTERMSIG(status));
+          
+    	}
+      jobs_list[0].pid=0;
+	}
+}
 
 
 /**
