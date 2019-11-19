@@ -11,6 +11,7 @@
 #define COMMAND_LINE_SIZE 1024
 #define ARGS_SIZE 64
 #define PROMPT '$'
+#define N_JOBS 64
 #define TRUE 1
 #define FALSE 0
 #include <stdio.h>
@@ -41,6 +42,14 @@
 #define BLANCO_F   "\x1b[47m"
 #pragma endregion
 
+struct info_process {
+    pid_t pid;
+    char status; // ’E’, ‘D’, ‘F’
+    char command_line[COMMAND_LINE_SIZE]; // Comando
+};
+
+static struct info_process jobs_list[N_JOBS];
+
 void imprimir_prompt();
 char *read_line(char *line); 
 int execute_line(char *line);
@@ -53,6 +62,7 @@ int internal_jobs(char **args);
 int internal_cd(char **args); 
 void reaper(int signum);
 void ctrlc(int signum);
+
 
 void imprimir_prompt() {
     char dir [ARGS_SIZE];
@@ -81,19 +91,27 @@ char *read_line(char *line) {
 
 int execute_line(char *line) {
     char *args[ARGS_SIZE];
+    strcpy(jobs_list[0].command_line, line);
     parse_args(args, line);
     int check = check_internal(args);
     if (check == FALSE) { // Ejecutar comando externo
       pid_t pid = fork();
+      jobs_list[0].pid = pid;
       if (pid == 0) { // Proceso hijo
+        signal(SIGCHLD, SIG_DFL);
+        signal(SIGINT, SIG_IGN);
         printf("[execute_line() → PID Hijo: %d]\n", getpid());
         if (execvp(args[0], args) == -1) {
           fprintf(stderr, "%s\n", strerror(errno));
-          exit(FALSE);
+          //jobs_list[0].pid = 0;
+          //exit(FALSE);
         }
+        reaper(SIGCHLD);
       } else if (pid > 0) { // Proceso padre
         printf("[execute_line() → PID Padre: %d]\n", getpid());
-        wait(NULL);
+        while ( jobs_list[0].pid != 0) {
+          pause();
+        }
       } else {
         // Error
       }
@@ -274,7 +292,6 @@ int internal_source(char **args) {
   return TRUE;
 }
 
-
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
   return TRUE;
@@ -290,10 +307,10 @@ void reaper(int signum){
   		jobs_list[0].pid=0;
     	if(WIFEXITED(status)){
         	printf("[reaper()→ Proceso hijo %d finalizado con exit code: %d]\n",pid, WEXITSTATUS(status));
-          
+
     	} else if(WIFSIGNALED(status)){
         	printf("[reaper()→ Proceso hijo %d finalizado por señal: %d]\n",pid, WTERMSIG(status));
-          
+
     	}
       jobs_list[0].pid=0;
 	}
