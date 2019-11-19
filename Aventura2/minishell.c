@@ -342,3 +342,13 @@ void ctrlc(int signum){
     fprintf("\nError: Señal SIGTERM no enviada debido a que no hay ningún proceso en foreground");
   }
 }
+
+/* Ruben
+int  jobs_list_remove(int pos){
+    job_list[pos].pid = job_list[N_JOBS-1].pid
+    job_list[pos].status = job_list[N_JOBS-1].status
+    strcopy(job_list[pos].command_line,job_list[N_JOBS-1].command_line)
+    job_list[N_JOBS-1].pid = 0;
+    n_pids--;
+}
+*/
