@@ -62,6 +62,12 @@ int internal_jobs(char **args);
 int internal_cd(char **args); 
 void reaper(int signum);
 void ctrlc(int signum);
+int jobs_list_add(pid_t pid, char status, char *command_line);
+int jobs_list_find(pid_t pid);
+int  jobs_list_remove(int pos);
+void reaper(int signum);
+int internal_jobs();
+void ctrlz(int signum);
 
 
 void imprimir_prompt() {
@@ -326,7 +332,7 @@ void ctrlc(int signum){
   signal(signum, ctrlc);
   struct info_process *proceso;
   char mensaje[1500];
-  sprintf(mensaje, "[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",proceso->pid,jobs_list[0].pid);
+  sprintf(mensaje, "\n[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",getpid(),jobs_list[0].pid);
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
@@ -339,11 +345,11 @@ void ctrlc(int signum){
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell", SIGTERM, signum);
+      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada debido a que no hay ningún proceso en foreground", SIGTERM);
+    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }
@@ -357,3 +363,11 @@ int  jobs_list_remove(int pos){
     n_pids--;
 }
 */
+
+// int jobs_list_add(pid_t pid, char status, char *command_line){}
+// void reaper(int signum){}
+
+
+// int jobs_list_find(pid_t pid){}  ANDREA
+// int internal_jobs(){}            ANDREA
+// void ctrlz(int signum){}         ANDREA
