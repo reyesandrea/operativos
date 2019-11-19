@@ -323,22 +323,27 @@ void reaper(int signum){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlc(int signum){
-  signal(SIGINT, ctrlc);
-  char cm_line = "./minishell";
-  pid_t pid;
-  pid = getpid();
+  signal(signum, ctrlc);
+  struct info_process *proceso;
+  char mensaje[1500];
+  sprintf(mensaje, "[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",proceso->pid,jobs_list[0].pid);
+  write(2, mensaje, strlen(mensaje));
+
   if(jobs_list[0].pid > 0){
-    if(cm_line!=args[0]){
-      if(kill(pid,SIGTERM)==0){
-        fprintf(stderr, "\nSeñal %d enviada al proceso %d", signum,  getpid());
+    if(proceso->command_line !="./minishell"){
+      if(kill(proceso->pid,SIGTERM)==0){
+        sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
+        write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      fprintf("\nError: Señal SIGTERM no enviada debido a que el proceso en foreground es el shell");
+      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell", SIGTERM, signum);
+      write(2, mensaje, strlen(mensaje));
     }
   }else{
-    fprintf("\nError: Señal SIGTERM no enviada debido a que no hay ningún proceso en foreground");
+    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada debido a que no hay ningún proceso en foreground", SIGTERM);
+    write(2, mensaje, strlen(mensaje));
   }
 }
