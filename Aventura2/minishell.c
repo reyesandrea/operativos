@@ -21,6 +21,7 @@
 #include <string.h> //strerror()
 #include <sys/types.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #pragma region //COLORES (Eliminar los que no se usen)
 #define RESET_COLOR    "\x1b[0m"
@@ -298,8 +299,21 @@ int internal_source(char **args) {
   return TRUE;
 }
 
+
+/**
+ * Función que imprime por pantalla el identificador de
+ * trabajo, su PID, la línea de comandos y el estatus
+ * (D de Detenido, E de Ejecutando)
+ * @param: args
+ **/
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
+  int i = 1;
+  while (jobs_list[i].pid!=0)
+  {
+    printf("[%d] %d   %d    %s \n", i, jobs_list[i].pid, jobs_list[i].status, jobs_list[i].command_line);
+    i++;
+  }
   return TRUE;
 }
 
@@ -368,6 +382,31 @@ int  jobs_list_remove(int pos){
 // void reaper(int signum){}
 
 
-// int jobs_list_find(pid_t pid){}  ANDREA
-// int internal_jobs(){}            ANDREA
-// void ctrlz(int signum){}         ANDREA
+/**
+ * Función que busca en el array de trabajos el PID que recibe como
+ * argumento
+ * @param pid
+ * @return 
+ *          i: posicion del PID en el array de trabajos
+ **/
+int jobs_list_find(pid_t pid){
+  bool found = FALSE;
+  int i = 1;
+  while (found == FALSE){
+    if (jobs_list[i].pid == pid){
+      found = TRUE;
+      return i;
+    }
+    i++;
+  }
+} 
+
+
+/**
+ * Función que actúa como un manejador propio para la 
+ * señal SIGTSTP (Ctrl+Z)
+ * @param signum: número que identifica la señal recibida
+ **/
+/*void ctrlz(int signum){
+
+}*/
