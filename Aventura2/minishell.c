@@ -350,7 +350,7 @@ void ctrlc(int signum){
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
-    if(proceso->command_line !="./minishell"){
+    if(strcmp(proceso->command_line, "./minishell") != 0) {
       if(kill(proceso->pid,SIGTERM)==0){
         sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
