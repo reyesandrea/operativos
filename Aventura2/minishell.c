@@ -48,7 +48,7 @@ struct info_process {
     char status; // ’E’, ‘D’, ‘F’
     char command_line[COMMAND_LINE_SIZE]; // Comando
 };
-
+int n_pids;
 static struct info_process jobs_list[N_JOBS];
 
 void imprimir_prompt();
@@ -318,23 +318,44 @@ int internal_jobs(char **args) {
   return TRUE;
 }
 
-
+/*
+Al igual que en la nivel anterior, el enterrador controlará si el hijo que acaba es el que se ejecuta en primer plano 
+(waitpid() devuelve el pid del hijo que ha terminado), y en tal caso reseteará los datos de jobs_list[0].pid, pero en 
+caso de ser background llamará a la función  jobs_list_find() para buscar el PID del proceso que ha acabado en la lista 
+de trabajos, imprimirá por la salida estándard de errores que ese proceso ha terminado (indicando los datos del mismo) y 
+llamará a la función jobs_list_remove() para eliminar el proceso de la lista
+*/
 void reaper(int signum){
-	signal(signum, reaper);
-	pid_t pid;
-	int status;
-	pid = waitpid(-1, &status, WNOHANG);
-	if(pid>0){//Si el hijo que acaba se ejecuta en primer plano, poner la variable jobs list a 0.
-  		jobs_list[0].pid=0;
-    	if(WIFEXITED(status)){
-        	printf("[reaper()→ Proceso hijo %d finalizado con exit code: %d]\n",pid, WEXITSTATUS(status));
-
-    	} else if(WIFSIGNALED(status)){
-        	printf("[reaper()→ Proceso hijo %d finalizado por señal: %d]\n",pid, WTERMSIG(status));
-
-    	}
-      jobs_list[0].pid=0;
-	}
+  int status, posicion=0;
+  signal(SIGCHLD,reaper);
+  signal(SIGINT,ctrlc);
+  pid_t pidaux=waitpid(-1,&status,WNOHANG);
+  while(pidaux>0){
+    
+    if(pidaux == jobs_list[0].pid){//proceso que acaba en primer plano      
+      if(WIFEXITED(status)){
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground(%s) finalizado con exit code %d \n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
+      }else if(WIFSIGNALED(status)){
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
+      }
+      jobs_list[0].pid = 0;
+      jobs_list[0].status = 'F';
+      strcpy(jobs_list[0].command_line,"\0");
+      pidaux=waitpid(-1,&status,WNOHANG);
+      fflush(stdout);
+    }else{
+      posicion = jobs_list_find(pidaux);
+       if(WIFEXITED(status)){
+         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d \n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
+       }else if(WIFSIGNALED(status)){
+         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con señal numero %d\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
+       }
+      if(posicion != -1){
+        jobs_list_remove(posicion);
+      }
+      pidaux=waitpid(-1,&status,WNOHANG);
+    }
+  }
 }
 
 
@@ -369,17 +390,26 @@ void ctrlc(int signum){
   }
 }
 
-/* Ruben
-int  jobs_list_remove(int pos){
-    job_list[pos].pid = job_list[N_JOBS-1].pid
-    job_list[pos].status = job_list[N_JOBS-1].status
-    strcopy(job_list[pos].command_line,job_list[N_JOBS-1].command_line)
-    job_list[N_JOBS-1].pid = 0;
+
+int jobs_list_remove(int pos){
+    job_list[pos].pid = job_list[n_pids-1].pid
+    job_list[pos].status = job_list[n_pids-1].status
+    strcopy(job_list[pos].command_line,job_list[n_pids-1].command_line)
+    job_list[n_pids-1].pid = 0;
     n_pids--;
 }
-*/
 
-// int jobs_list_add(pid_t pid, char status, char *command_line){}
+int jobs_list_add(pid_t pid, char status, char *command_line){
+  if(n_pids<ARGS_SIZE){
+    n_pids++;
+    jobs_list[n_pids].pid = pid;
+    jobs_list[n_pids].status = status;
+    strcpy(jobs_list[n_pids].command_line , command_line);
+    printf("[%d], %d     %c , %s \n", n_pids, pid, status, command_line);
+  }else{
+    return -1;//error nº maximo alcanzado
+  }
+	
 // void reaper(int signum){}
 
 
