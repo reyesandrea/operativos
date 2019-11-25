@@ -80,6 +80,7 @@ void imprimir_prompt() {
     fflush(stdout);
 }
 
+
 int main() {
   char line[ARGS_SIZE];
   signal(SIGCHLD, reaper); 
@@ -91,11 +92,13 @@ int main() {
   return 0;
 }
 
+
 char *read_line(char *line) {
   imprimir_prompt();
   fgets(line, ARGS_SIZE, stdin);
   return line;
 }
+
 
 int execute_line(char *line) {
     char *args[ARGS_SIZE];
@@ -129,6 +132,7 @@ int execute_line(char *line) {
     }
 }
 
+
 /**
  * Divide una instrucción en tokens, que guarda en el 
  * parámetro **args.
@@ -150,6 +154,7 @@ int parse_args(char **args, char *line) {
   args[i] = token;
   return i;
 }
+
 
 /* 
  * Función booleana que averigua si args[0] se trata de un
@@ -318,6 +323,7 @@ int internal_jobs(char **args) {
   return TRUE;
 }
 
+
 /*
 Al igual que en la nivel anterior, el enterrador controlará si el hijo que acaba es el que se ejecuta en primer plano 
 (waitpid() devuelve el pid del hijo que ha terminado), y en tal caso reseteará los datos de jobs_list[0].pid, pero en 
@@ -392,10 +398,10 @@ void ctrlc(int signum){
 
 
 int jobs_list_remove(int pos){
-    job_list[pos].pid = job_list[n_pids-1].pid
-    job_list[pos].status = job_list[n_pids-1].status
-    strcopy(job_list[pos].command_line,job_list[n_pids-1].command_line)
-    job_list[n_pids-1].pid = 0;
+    jobs_list[pos].pid = jobs_list[n_pids-1].pid;
+    jobs_list[pos].status = jobs_list[n_pids-1].status;
+    strcpy(jobs_list[pos].command_line,jobs_list[n_pids-1].command_line);
+    jobs_list[n_pids-1].pid = 0;
     n_pids--;
 }
 
@@ -409,8 +415,7 @@ int jobs_list_add(pid_t pid, char status, char *command_line){
   }else{
     return -1;//error nº maximo alcanzado
   }
-	
-// void reaper(int signum){}
+}
 
 
 /**
