@@ -415,11 +415,17 @@ void ctrlz(int signum){
   if(jobs_list[0].pid > 0){
     if(strcmp(proceso->command_line, "./minishell") != 0) {
       if(kill(proceso->pid,SIGTSTP)==0){
-        proceso->status = 'D';
-        jobs_list_add(proceso->pid, proceso->status, proceso->command_line);
-        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d", signum,  getpid());
+        proceso->status = 'D'; // El proceso se detuvo
 
-        // FALTA RESETEAR LOS DATOS DE JOBS_LIST[O] 
+        // Se añaden los datos del proceso detenido a jobs_list[n_pids]
+        jobs_list_add(proceso->pid, proceso->status, proceso->command_line);
+        
+        // Reseteo de los datos de jobs_list[0]
+        jobs_list[0].pid = 0;
+        strcpy(jobs_list[0].command_line,"");
+        jobs_list[0].status = 'F';
+        
+        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
