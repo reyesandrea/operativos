@@ -84,6 +84,7 @@ int main() {
   char line[ARGS_SIZE];
   signal(SIGCHLD, reaper); 
   signal(SIGINT, ctrlc); // Asociación de la señal SIGINT
+  signal(SIGTSTP, ctrlz); // Asociación de la señal SIGTSTP a la función ctrlz
   while (read_line(line)) {
     execute_line(line);
   }
@@ -407,6 +408,29 @@ int jobs_list_find(pid_t pid){
  * señal SIGTSTP (Ctrl+Z)
  * @param signum: número que identifica la señal recibida
  **/
-/*void ctrlz(int signum){
+void ctrlz(int signum){
+  signal(signum, ctrlz);
+  char mensaje[1500];
+  struct info_process *proceso;
+  if(jobs_list[0].pid > 0){
+    if(strcmp(proceso->command_line, "./minishell") != 0) {
+      if(kill(proceso->pid,SIGTSTP)==0){
+        proceso->status = 'D';
+        jobs_list_add(proceso->pid, proceso->status, proceso->command_line);
+        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d", signum,  getpid());
 
-}*/
+        // FALTA RESETEAR LOS DATOS DE JOBS_LIST[O] 
+        write(2, mensaje, strlen(mensaje));
+      }else{
+        perror("kill");
+        exit(-1);
+      }
+    }else{
+      sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
+      write(2, mensaje, strlen(mensaje));
+    }
+  }else{
+    sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
+    write(2, mensaje, strlen(mensaje));
+  }
+}
