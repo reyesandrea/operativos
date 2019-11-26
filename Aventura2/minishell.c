@@ -332,7 +332,7 @@ int internal_jobs(char **args) {
   int i = 1;
   while (jobs_list[i].pid!=0)
   {
-    printf("[%d] %d   %d    %s \n", i, jobs_list[i].pid, jobs_list[i].status, jobs_list[i].command_line);
+    printf("[%d] %d   %c    %s \n", i, jobs_list[i].pid, jobs_list[i].status, jobs_list[i].command_line);
     i++;
   }
   return TRUE;
