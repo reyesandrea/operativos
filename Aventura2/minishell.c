@@ -100,17 +100,27 @@ char *read_line(char *line) {
 }
 
 
+int is_background(char* line) { 
+  if (line[(strlen(line) - 2)] == '&') { 
+    line[(strlen(line) - 2)] = 0; 
+    return TRUE; 
+  } 
+  return FALSE; 
+}
+
 int execute_line(char *line) {
     char *args[ARGS_SIZE];
-    strcpy(jobs_list[0].command_line, line);
+    int bg = is_background(line);
     parse_args(args, line);
     int check = check_internal(args);
     if (check == FALSE) { // Ejecutar comando externo
       pid_t pid = fork();
-      jobs_list[0].pid = pid;
       if (pid == 0) { // Proceso hijo
         signal(SIGCHLD, SIG_DFL);
         signal(SIGINT, SIG_IGN);
+        if (bg == TRUE) {
+          signal(SIGTSTP, SIG_IGN);
+        }
         printf("[execute_line() → PID Hijo: %d]\n", getpid());
         if (execvp(args[0], args) == -1) {
           fprintf(stderr, "%s\n", strerror(errno));
@@ -120,8 +130,14 @@ int execute_line(char *line) {
         reaper(SIGCHLD);
       } else if (pid > 0) { // Proceso padre
         printf("[execute_line() → PID Padre: %d]\n", getpid());
-        while ( jobs_list[0].pid != 0) {
-          pause();
+        if (bg == TRUE) {
+          jobs_list_add(pid, 'E', line);
+        } else {
+          jobs_list[0].pid = pid;
+          strcpy(jobs_list[0].command_line, line);
+          while ( jobs_list[0].pid != 0) {
+            pause();
+          }
         }
       } else {
         // Error
@@ -131,7 +147,6 @@ int execute_line(char *line) {
       return check;
     }
 }
-
 
 /**
  * Divide una instrucción en tokens, que guarda en el 
