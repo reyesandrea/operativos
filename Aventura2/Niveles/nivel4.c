@@ -76,7 +76,7 @@ void imprimir_prompt() {
 
 int main() {
   char line[ARGS_SIZE];
-//  signal(SIGCHLD, reaper); 
+  signal(SIGCHLD, reaper); 
   signal(SIGINT, ctrlc); // Asociación de la señal SIGINT
   while (read_line(line)) {
     execute_line(line);
@@ -107,7 +107,7 @@ int execute_line(char *line) {
           //jobs_list[0].pid = 0;
           //exit(FALSE);
         }
-//        reaper(SIGCHLD);
+        reaper(SIGCHLD);
       } else if (pid > 0) { // Proceso padre
         printf("[execute_line() → PID Padre: %d]\n", getpid());
         while ( jobs_list[0].pid != 0) {
@@ -331,7 +331,7 @@ void ctrlc(int signum){
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
-    if(proceso->command_line !="./minishell"){
+    if(strcmp(proceso->command_line, "./minishell") != 0){
       if(kill(proceso->pid,SIGTERM)==0){
         sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
@@ -348,13 +348,3 @@ void ctrlc(int signum){
     write(2, mensaje, strlen(mensaje));
   }
 }
-
-/* Ruben
-int  jobs_list_remove(int pos){
-    job_list[pos].pid = job_list[N_JOBS-1].pid
-    job_list[pos].status = job_list[N_JOBS-1].status
-    strcopy(job_list[pos].command_line,job_list[N_JOBS-1].command_line)
-    job_list[N_JOBS-1].pid = 0;
-    n_pids--;
-}
-*/
