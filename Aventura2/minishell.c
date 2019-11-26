@@ -206,7 +206,7 @@ int check_internal(char **args) {
   comp = strcmp(args[0], "bg");
   if (comp == 0) {
     return internal_bg(&args[0]);
-  }    
+  }
   comp = strcmp(args[0], "exit");
   if (comp == 0) {
     exit(0);
@@ -508,7 +508,7 @@ void ctrlz(int signum){
  * @param args: line
  **/
 int internal_fg(char **args){
-  int pos = *args[1];
+  int pos = int(args);
   char mensaje[1500];
   if(args[1] == NULL){  // Chequeo de sintaxis
     fprintf(stderr, "Error de sintaxis. Uso: fg nº_de_trabajo\n");
@@ -533,3 +533,27 @@ int internal_fg(char **args){
     }
   return TRUE;
 }
+
+
+int internal_bg(char **args){
+    int pos = (int)args;
+    if (pos >= n_pids || pos == 0) {
+         fprintf(stderr,"No exite ese trabajo");
+        return -1;
+    } else if (jobs_list[pos].status== 'E'){
+        fprintf(stderr,"El trabajo ya está en segundo plano");
+        return -1;
+    } else {
+        jobs_list[pos].status= 'E';
+        strcat(jobs_list[pos].command_line, " &");
+        if(kill(jobs_list[pos].pid,SIGCONT)==0){
+            printf("[internal_bg()→ señal 18 (SIGCONT) enviada a %d %s", getpid(), jobs_list[pos].command_line);
+            printf("\n[%d] %d   %c    %s \n", pos, jobs_list[pos].pid, jobs_list[pos].status, jobs_list[pos].command_line);
+        
+        }else{
+            perror("kill");
+            return -1;
+      }
+    }
+}
+
