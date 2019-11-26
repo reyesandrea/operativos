@@ -70,6 +70,7 @@ int  jobs_list_remove(int pos);
 void reaper(int signum);
 int internal_jobs();
 void ctrlz(int signum);
+int internal_fg(char **args);
 
 
 void imprimir_prompt() {
@@ -198,6 +199,14 @@ int check_internal(char **args) {
   if (comp == 0) {
     return internal_jobs(&args[0]);
   }
+  comp = strcmp(args[0], "fg");
+  if (comp == 0) {
+    return internal_fg(&args[0]);
+  }
+  comp = strcmp(args[0], "bg");
+  if (comp == 0) {
+    return internal_bg(&args[0]);
+  }    
   comp = strcmp(args[0], "exit");
   if (comp == 0) {
     exit(0);
@@ -387,7 +396,7 @@ void reaper(int signum){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlc(int signum){
-  signal(signum, ctrlc);
+  signal(signum, &ctrlc);
   struct info_process *proceso;
   char mensaje[1500];
   sprintf(mensaje, "\n[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",getpid(),jobs_list[0].pid);
@@ -460,7 +469,7 @@ int jobs_list_find(pid_t pid){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlz(int signum){
-  signal(signum, ctrlz);
+  signal(signum, &ctrlz);
   char mensaje[1500];
   struct info_process *proceso;
   if(jobs_list[0].pid > 0){
@@ -490,4 +499,37 @@ void ctrlz(int signum){
     sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
     write(2, mensaje, strlen(mensaje));
   }
+}
+
+
+/**
+ * Función que envía un trabajo detenido al foreground reactivando
+ * su ejecución, o uno del background al foreground.
+ * @param args: line
+ **/
+int internal_fg(char **args){
+  int pos = *args[1];
+  char mensaje[1500];
+  if(args[1] == NULL){  // Chequeo de sintaxis
+    fprintf(stderr, "Error de sintaxis. Uso: fg nº_de_trabajo\n");
+    return -1; //error
+  }
+  if (pos>=n_pids || pos==0){ // Verificación de existencia del trabajo
+    fprintf(stderr, "Error. No existe ese trabajo.\n");
+    return -1; //error
+  }
+  if (jobs_list[pos].status == 'D'){
+    if(kill(jobs_list[pos].pid,SIGCONT)==0){
+        sprintf(mensaje, "[internal_fg()→ Señal 18 (SIGCONT) enviada al proceso %d",  getpid());
+        write(2, mensaje, strlen(mensaje));
+      }else{
+        perror("kill");
+        exit(-1);
+      }
+    }else{
+      sprintf(mensaje, "[internal_fg() → Error: Señal 18 (SIGCONT) no enviada debido a que el proceso en el foreground es el shell]\n");
+      write(2, mensaje, strlen(mensaje));
+      return -1;
+    }
+  return TRUE;
 }
