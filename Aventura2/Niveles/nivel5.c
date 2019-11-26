@@ -394,20 +394,20 @@ void ctrlc(int signum){
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
-    if(strcmp(proceso->command_line, "./minishell") != 0) {
-      if(kill(proceso->pid,SIGTERM)==0){
-        sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
+    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+      if(kill(jobs_list[0].pid,SIGTERM)==0){
+        sprintf(mensaje, "\n[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
+      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
+    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }
@@ -462,32 +462,32 @@ int jobs_list_find(pid_t pid){
 void ctrlz(int signum){
   signal(signum, ctrlz);
   char mensaje[1500];
-  struct info_process *proceso;
   if(jobs_list[0].pid > 0){
-    if(strcmp(proceso->command_line, "./minishell") != 0) {
-      if(kill(proceso->pid,SIGTSTP)==0){
-        proceso->status = 'D'; // El proceso se detuvo
+    // Verificación de que el proceso en el foreground no sea el minishell
+    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+      if(kill(jobs_list[0].pid,SIGTSTP)==0){
+        jobs_list[0].status = 'D'; // El proceso se detuvo
 
         // Se añaden los datos del proceso detenido a jobs_list[n_pids]
-        jobs_list_add(proceso->pid, proceso->status, proceso->command_line);
+        jobs_list_add(jobs_list[0].pid, jobs_list[0].status, jobs_list[0].command_line);
         
         // Reseteo de los datos de jobs_list[0]
         jobs_list[0].pid = 0;
-        strcpy(jobs_list[0].command_line,"");
+        strcpy(jobs_list[0].command_line,"\0");
         jobs_list[0].status = 'F';
         
-        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d", signum,  getpid());
+        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d \n", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
+      sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
+    sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }

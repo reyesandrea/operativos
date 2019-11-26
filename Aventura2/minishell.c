@@ -71,6 +71,7 @@ void reaper(int signum);
 int internal_jobs();
 void ctrlz(int signum);
 int internal_fg(char **args);
+int internal_bg(char **args);
 
 
 void imprimir_prompt() {
@@ -340,8 +341,7 @@ int internal_source(char **args) {
 int internal_jobs(char **args) {
   printf("Función Jobs\n");
   int i = 1;
-  while (jobs_list[i].pid!=0)
-  {
+  while (jobs_list[i].pid!=0){
     printf("[%d] %d   %c    %s \n", i, jobs_list[i].pid, jobs_list[i].status, jobs_list[i].command_line);
     i++;
   }
@@ -365,9 +365,9 @@ void reaper(int signum){
     
     if(pidaux == jobs_list[0].pid){//proceso que acaba en primer plano      
       if(WIFEXITED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground(%s) finalizado con exit code %d \n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground(%s) finalizado con exit code %d]\n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
       }else if(WIFSIGNALED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d]\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
       }
       jobs_list[0].pid = 0;
       jobs_list[0].status = 'F';
@@ -377,9 +377,9 @@ void reaper(int signum){
     }else{
       posicion = jobs_list_find(pidaux);
        if(WIFEXITED(status)){
-         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d \n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
+         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
        }else if(WIFSIGNALED(status)){
-         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con señal numero %d\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
+         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con señal numero %d]\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
        }
       if(posicion != -1){
         jobs_list_remove(posicion);
@@ -396,27 +396,27 @@ void reaper(int signum){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlc(int signum){
-  signal(signum, &ctrlc);
+  signal(signum, ctrlc);
   struct info_process *proceso;
   char mensaje[1500];
   sprintf(mensaje, "\n[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",getpid(),jobs_list[0].pid);
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
-    if(strcmp(proceso->command_line, "./minishell") != 0) {
-      if(kill(proceso->pid,SIGTERM)==0){
-        sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
+    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+      if(kill(jobs_list[0].pid,SIGTERM)==0){
+        sprintf(mensaje, "\n[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
+      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
+    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }
@@ -469,34 +469,34 @@ int jobs_list_find(pid_t pid){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlz(int signum){
-  signal(signum, &ctrlz);
+  signal(signum, ctrlz);
   char mensaje[1500];
-  struct info_process *proceso;
   if(jobs_list[0].pid > 0){
-    if(strcmp(proceso->command_line, "./minishell") != 0) {
-      if(kill(proceso->pid,SIGTSTP)==0){
-        proceso->status = 'D'; // El proceso se detuvo
+    // Verificación de que el proceso en el foreground no sea el minishell
+    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+      if(kill(jobs_list[0].pid,SIGTSTP)==0){
+        jobs_list[0].status = 'D'; // El proceso se detuvo
 
         // Se añaden los datos del proceso detenido a jobs_list[n_pids]
-        jobs_list_add(proceso->pid, proceso->status, proceso->command_line);
+        jobs_list_add(jobs_list[0].pid, jobs_list[0].status, jobs_list[0].command_line);
         
         // Reseteo de los datos de jobs_list[0]
         jobs_list[0].pid = 0;
-        strcpy(jobs_list[0].command_line,"");
+        strcpy(jobs_list[0].command_line,"\0");
         jobs_list[0].status = 'F';
         
-        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d", signum,  getpid());
+        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d \n", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
+      sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
+    sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }
@@ -508,8 +508,8 @@ void ctrlz(int signum){
  * @param args: line
  **/
 int internal_fg(char **args){
-  int pos = int(args);
-  char mensaje[1500];
+  int pos = *args[1];
+  char mensaje[1500], *line;
   if(args[1] == NULL){  // Chequeo de sintaxis
     fprintf(stderr, "Error de sintaxis. Uso: fg nº_de_trabajo\n");
     return -1; //error
@@ -520,17 +520,30 @@ int internal_fg(char **args){
   }
   if (jobs_list[pos].status == 'D'){
     if(kill(jobs_list[pos].pid,SIGCONT)==0){
-        sprintf(mensaje, "[internal_fg()→ Señal 18 (SIGCONT) enviada al proceso %d",  getpid());
-        write(2, mensaje, strlen(mensaje));
-      }else{
-        perror("kill");
-        exit(-1);
-      }
-    }else{
-      sprintf(mensaje, "[internal_fg() → Error: Señal 18 (SIGCONT) no enviada debido a que el proceso en el foreground es el shell]\n");
+      sprintf(mensaje, "[internal_fg()→ Señal 18 (SIGCONT) enviada al proceso %d",  getpid());
       write(2, mensaje, strlen(mensaje));
-      return -1;
+      jobs_list[pos].status = 'E';
+      
+      // Falta borrar el & del jobs_list[pos].command_line
+      strcpy(jobs_list[0].command_line,jobs_list[pos].command_line);
+      jobs_list[0].pid = jobs_list[pos].pid;
+      jobs_list[0].status = jobs_list[pos].status;
+
+      jobs_list_remove(pos);
+      printf("%s \n", jobs_list[0].command_line);
+      
+    }else{
+      perror("kill");
+      exit(-1);
     }
+  }else{
+    sprintf(mensaje, "[internal_fg() → Error: Señal 18 (SIGCONT) no enviada debido a que el proceso en el foreground es el shell]\n");
+    write(2, mensaje, strlen(mensaje));
+    return -1;
+  }
+  while(jobs_list[0].pid>0){
+    pause();
+  }
   return TRUE;
 }
 

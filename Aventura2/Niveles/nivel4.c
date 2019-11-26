@@ -331,20 +331,20 @@ void ctrlc(int signum){
   write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
-    if(strcmp(proceso->command_line, "./minishell") != 0){
-      if(kill(proceso->pid,SIGTERM)==0){
-        sprintf(mensaje, "[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
+    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+      if(kill(jobs_list[0].pid,SIGTERM)==0){
+        sprintf(mensaje, "\n[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
         write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
+      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
+    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
 }
