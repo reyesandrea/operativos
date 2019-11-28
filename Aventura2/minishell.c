@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #pragma region //COLORES (Eliminar los que no se usen)
 #define RESET_COLOR    "\x1b[0m"
@@ -72,6 +73,8 @@ int internal_jobs();
 void ctrlz(int signum);
 int internal_fg(char **args);
 int internal_bg(char **args);
+int is_background(char* line);
+int is_output_redirection(char **args);
 
 
 void imprimir_prompt() {
@@ -111,11 +114,32 @@ int is_background(char* line) {
   return FALSE; 
 }
 
+int is_output_redirection(char **args) {
+  int i = 0;
+  while (args[i] != NULL) {
+    if (strcmp(args[i], ">") == 0 && args[i + 1] != NULL) {
+      args[i] = NULL;
+      int fd = open(args[i + 1], O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
+      dup2(fd, 1);
+      close(fd);
+      return TRUE;
+    }
+    i++;
+  }
+  return FALSE;
+}
+
 int execute_line(char *line) {
+    char lineAux[ARGS_SIZE];
+    strcpy(lineAux, line);
+    lineAux[(strlen(lineAux) - 1)] = 0;
     char *args[ARGS_SIZE];
     int bg = is_background(line);
+    printf("%s", line);
     parse_args(args, line);
     int check = check_internal(args);
+    int stdout = dup(1);
+    is_output_redirection(args);
     if (check == FALSE) { // Ejecutar comando externo
       pid_t pid = fork();
       if (pid == 0) { // Proceso hijo
@@ -130,15 +154,19 @@ int execute_line(char *line) {
           //jobs_list[0].pid = 0;
           //exit(FALSE);
         }
+        dup2(stdout, 1);
+        close(stdout);
         reaper(SIGCHLD);
       } else if (pid > 0) { // Proceso padre
+        dup2(stdout, 1);
+        close(stdout);
         printf("[execute_line() → PID Padre: %d]\n", getpid());
         if (bg == TRUE) {
-          jobs_list_add(pid, 'E', line);
+          jobs_list_add(pid, 'E', lineAux);
         } else {
           jobs_list[0].pid = pid;
-          strcpy(jobs_list[0].command_line, line);
-          while ( jobs_list[0].pid != 0) {
+          strcpy(jobs_list[0].command_line, lineAux);
+          while (jobs_list[0].pid != 0) {
             pause();
           }
         }
