@@ -21,6 +21,7 @@
 #include <string.h> //strerror()
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <fcntl.h>
@@ -57,6 +58,8 @@ void imprimir_prompt();
 char *read_line(char *line); 
 int execute_line(char *line);
 int parse_args(char **args, char *line);
+char *my_strcat(char *dest, const char *src);
+size_t my_strlen(const char *str);
 int check_internal(char **args); 
 int internal_cd(char **args); 
 int internal_export(char **args); 
@@ -135,7 +138,7 @@ int execute_line(char *line) {
     lineAux[(strlen(lineAux) - 1)] = 0;
     char *args[ARGS_SIZE];
     int bg = is_background(line);
-    printf("%s", line);
+    //printf("%s", line);
     parse_args(args, line);
     int check = check_internal(args);
     int stdout = dup(1);
@@ -199,6 +202,39 @@ int parse_args(char **args, char *line) {
   }
   args[i] = token;
   return i;
+}
+
+
+/*
+ * Añade una cadena de caracteres a otra
+ * @param dest src
+ * @return: dest
+ */
+char *my_strcat(char *dest, const char *src){
+    int i = 0, j=0;
+    /*Bucle en el que recorremos dest buscando el primer caracter nulo, al encontrarlo,
+    lo sustituimos por el caracter no nulo correspondiente de src*/
+    for(j=0; j<my_strlen(dest)+1;j++){
+        if(dest[j]=='\0' && src[i]!='\0'){
+            dest[j]=src[i];
+            i++;
+        }
+    }
+    return dest;
+}
+
+
+/* 
+ * Calcula el nº de bytes de una cadena.
+ * @param str
+ * @return: longitud
+ */
+size_t my_strlen(const char *str){
+    int cont = 0;
+    while (str[cont]!='\0'){
+        cont++;
+    }
+    return cont;
 }
 
 
@@ -367,7 +403,6 @@ int internal_source(char **args) {
  * @param: args
  **/
 int internal_jobs(char **args) {
-  printf("Función Jobs\n");
   int i = 1;
   while (jobs_list[i].pid!=0){
     printf("[%d] %d   %c    %s \n", i, jobs_list[i].pid, jobs_list[i].status, jobs_list[i].command_line);
@@ -393,9 +428,9 @@ void reaper(int signum){
     
     if(pidaux == jobs_list[0].pid){//proceso que acaba en primer plano      
       if(WIFEXITED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground(%s) finalizado con exit code %d]\n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con exit code %d]\n", pidaux, jobs_list[posicion].command_line, WEXITSTATUS(status));
       }else if(WIFSIGNALED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d]\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
+        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d]\n", pidaux, jobs_list[posicion].command_line, WTERMSIG(status));
       }
       jobs_list[0].pid = 0;
       jobs_list[0].status = 'F';
@@ -425,7 +460,6 @@ void reaper(int signum){
  **/
 void ctrlc(int signum){
   signal(signum, ctrlc);
-  struct info_process *proceso;
   char mensaje[1500];
   sprintf(mensaje, "\n[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",getpid(),jobs_list[0].pid);
   write(2, mensaje, strlen(mensaje));
@@ -464,7 +498,7 @@ int jobs_list_add(pid_t pid, char status, char *command_line){
     jobs_list[n_pids].pid = pid;
     jobs_list[n_pids].status = status;
     strcpy(jobs_list[n_pids].command_line , command_line);
-    printf("[%d], %d     %c , %s \n", n_pids, pid, status, command_line);
+    printf("[%d]  %d    %c  %s \n", n_pids, pid, status, command_line);
   }else{
     return -1;//error nº maximo alcanzado
   }
@@ -508,13 +542,14 @@ void ctrlz(int signum){
         // Se añaden los datos del proceso detenido a jobs_list[n_pids]
         jobs_list_add(jobs_list[0].pid, jobs_list[0].status, jobs_list[0].command_line);
         
+        sprintf(mensaje, "\n[ctrlz()→ Soy el proceso con PID %d, el proceso en foreground es %d (%s)]",getpid(),jobs_list[0].pid, jobs_list[0].command_line);
+        write(2, mensaje, strlen(mensaje));
+        sprintf(mensaje, "\n[ctrlz()→ Señal %d (SIGTSTP) enviada al proceso %d (%s) por %d ]\n", signum, jobs_list[0].pid, jobs_list[0].command_line, getpid());
+        write(2, mensaje, strlen(mensaje));
         // Reseteo de los datos de jobs_list[0]
         jobs_list[0].pid = 0;
         strcpy(jobs_list[0].command_line,"\0");
         jobs_list[0].status = 'F';
-        
-        sprintf(mensaje, "[ctrlz()→ Señal %d enviada al proceso %d \n", signum,  getpid());
-        write(2, mensaje, strlen(mensaje));
       }else{
         perror("kill");
         exit(-1);
@@ -537,40 +572,51 @@ void ctrlz(int signum){
  **/
 int internal_fg(char **args){
   int pos = *args[1];
+  pos = pos - '0';
   char mensaje[1500], *line;
   if(args[1] == NULL){  // Chequeo de sintaxis
-    fprintf(stderr, "Error de sintaxis. Uso: fg nº_de_trabajo\n");
+    fprintf(stderr, "[internal_fg() → Error de sintaxis. Uso: fg nº_de_trabajo]\n");
     return -1; //error
-  }
-  if (pos>=n_pids || pos==0){ // Verificación de existencia del trabajo
-    fprintf(stderr, "Error. No existe ese trabajo.\n");
-    return -1; //error
-  }
-  if (jobs_list[pos].status == 'D'){
-    if(kill(jobs_list[pos].pid,SIGCONT)==0){
-      sprintf(mensaje, "[internal_fg()→ Señal 18 (SIGCONT) enviada al proceso %d",  getpid());
-      write(2, mensaje, strlen(mensaje));
-      jobs_list[pos].status = 'E';
-      
-      // Falta borrar el & del jobs_list[pos].command_line
-      strcpy(jobs_list[0].command_line,jobs_list[pos].command_line);
-      jobs_list[0].pid = jobs_list[pos].pid;
-      jobs_list[0].status = jobs_list[pos].status;
-
-      jobs_list_remove(pos);
-      printf("%s \n", jobs_list[0].command_line);
-      
-    }else{
-      perror("kill");
-      exit(-1);
-    }
   }else{
-    sprintf(mensaje, "[internal_fg() → Error: Señal 18 (SIGCONT) no enviada debido a que el proceso en el foreground es el shell]\n");
-    write(2, mensaje, strlen(mensaje));
-    return -1;
-  }
-  while(jobs_list[0].pid>0){
-    pause();
+    if (pos >= n_pids || pos==0){ // Verificación de existencia del trabajo
+      fprintf(stderr, "[internal_fg() → Error. No existe ese trabajo.]\n");
+      return -1; //error
+    }
+    if (jobs_list[pos].status == 'D'){
+      if(kill(jobs_list[pos].pid,SIGCONT)==0){
+        sprintf(mensaje, "[internal_fg() → Señal 18 (SIGCONT) enviada al proceso %d]\n",  getpid());
+        write(2, mensaje, strlen(mensaje));
+        jobs_list[pos].status = 'E';
+        
+        // Se borra el & del jobs_list[pos].command_line si lo tiene
+        char *args[ARGS_SIZE];
+        parse_args(args, jobs_list[pos].command_line);
+        if (args[2]!=NULL){
+          args[2] = NULL;
+          strcat(args[0],args[1]);
+          strcpy(jobs_list[0].command_line,args[0]);
+        }else{
+          strcpy(jobs_list[0].command_line,jobs_list[pos].command_line);
+        }
+
+        jobs_list[0].pid = jobs_list[pos].pid;
+        jobs_list[0].status = jobs_list[pos].status;
+
+        jobs_list_remove(pos);
+        printf("Command line luego de hacer remove: %s \n", jobs_list[0].command_line);
+        
+      }else{
+        perror("kill");
+        exit(-1);
+      }
+    }else{
+      sprintf(mensaje, "[internal_fg() → Error: Señal 18 (SIGCONT) no enviada debido a que el proceso en el foreground es el shell]\n");
+      write(2, mensaje, strlen(mensaje));
+      return -1;
+    }
+    while(jobs_list[0].pid>0){
+      pause();
+    }
   }
   return TRUE;
 }
