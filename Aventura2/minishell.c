@@ -51,7 +51,7 @@ struct info_process {
     char status; // ’E’, ‘D’, ‘F’
     char command_line[COMMAND_LINE_SIZE]; // Comando
 };
-int n_pids;
+int n_pids = 1;
 static struct info_process jobs_list[N_JOBS];
 
 void imprimir_prompt();
@@ -437,7 +437,13 @@ void ctrlc(int signum){
         perror("kill");
         exit(-1);
       }
+    }else{
+      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
+      write(2, mensaje, strlen(mensaje));
     }
+  }else{
+    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
+    write(2, mensaje, strlen(mensaje));
   }
 }
 
@@ -453,10 +459,10 @@ int jobs_list_remove(int pos){
 int jobs_list_add(pid_t pid, char status, char *command_line){
   if(n_pids<ARGS_SIZE){
     n_pids++;
-    jobs_list[n_pids].pid = pid;
-    jobs_list[n_pids].status = status;
-    strcpy(jobs_list[n_pids].command_line , command_line);
-    printf("[%d]  %d    %c  %s \n", n_pids, pid, status, command_line);
+    jobs_list[n_pids-1].pid = pid;
+    jobs_list[n_pids-1].status = status;
+    strcpy(jobs_list[n_pids-1].command_line , command_line);
+    printf("[%d]  %d    %c  %s \n", n_pids-1, pid, status, command_line);
   }else{
     return -1;//error nº maximo alcanzado
   }
@@ -527,7 +533,7 @@ void ctrlz(int signum){
 int internal_fg(char **args){
   int pos = *args[1];
   pos = pos - '0';
-  char mensaje[1500], *line;
+  char mensaje[1500], *line, *esp=" ";
   if(args[1] == NULL){  // Chequeo de sintaxis
     fprintf(stderr, "[internal_fg() → Error de sintaxis. Uso: fg nº_de_trabajo]\n");
     return -1; //error
@@ -540,16 +546,12 @@ int internal_fg(char **args){
       if(kill(jobs_list[pos].pid,SIGCONT)==0){
         jobs_list[pos].status = 'E';
         
+        printf("Command line joblistpos: %s \n", jobs_list[pos].command_line);
         // Se borra el & del jobs_list[pos].command_line si lo tiene
         char *args[ARGS_SIZE];
         parse_args(args, jobs_list[pos].command_line);
-        if (args[2]!=NULL){
-          args[2] = NULL;
-          strcat(args[0],args[1]);
-          strcpy(jobs_list[0].command_line,args[0]);
-        }else{
-          strcpy(jobs_list[0].command_line,jobs_list[pos].command_line);
-        }
+        strcat(args[0],args[1]);
+        strcpy(jobs_list[0].command_line,args[0]);
 
         jobs_list[0].pid = jobs_list[pos].pid;
         jobs_list[0].status = jobs_list[pos].status;
@@ -566,9 +568,9 @@ int internal_fg(char **args){
       write(2, mensaje, strlen(mensaje));
       return -1;
     }
+  }
     while(jobs_list[0].pid>0){
-      pause();
-    }
+    pause();
   }
   return TRUE;
 }
