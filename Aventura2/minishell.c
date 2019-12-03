@@ -14,7 +14,12 @@
 #define N_JOBS 64
 #define TRUE 1
 #define FALSE 0
+#define USE_READLINE
 #include <stdio.h>
+#ifdef USE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h> //errno
@@ -53,8 +58,9 @@ struct info_process {
 };
 int n_pids = 1;
 static struct info_process jobs_list[N_JOBS];
+static char *line_read = (char *)NULL;
 
-void imprimir_prompt();
+char* obtener_prompt();
 char *read_line(char *line); 
 int execute_line(char *line);
 int parse_args(char **args, char *line);
@@ -80,13 +86,13 @@ int is_background(char* line);
 int is_output_redirection(char **args);
 
 
-void imprimir_prompt() {
+char * obtener_prompt() {
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
     char ESC = 27;
-    printf("%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR , ESC ,getenv("USER"),dir,PROMPT);
-    printf("%c[0m",ESC); /* turn off bold */
-    fflush(stdout);
+    static char prompt[50];
+    sprintf(prompt, "%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR"%c[0m" , ESC ,getenv("USER"),dir,PROMPT,ESC);
+    return prompt;
 }
 
 
@@ -103,15 +109,34 @@ int main() {
 
 
 char *read_line(char *line) {
-  imprimir_prompt();
-  fgets(line, ARGS_SIZE, stdin);
+  #ifdef USE_READLINE
+  if (line_read) {
+    free (line_read);
+    line_read = (char *)NULL;
+  }    
+  line_read = readline(obtener_prompt());
+  fflush(stdout);
+  if (line_read == NULL) {
+    exit(0);
+  }
+  if (line_read && *line_read) {
+  add_history (line_read);
+  }
+  strcpy(line, line_read);
   return line;
+  #else
+  printf("%s", obtener_prompt());
+  fflush(stdout);
+  fgets(line, ARGS_SIZE, stdin);
+  line[strlen(line) - 1] = 0;
+  return line;
+  #endif
 }
 
 
 int is_background(char* line) { 
-  if (line[(strlen(line) - 2)] == '&') { 
-    line[(strlen(line) - 2)] = 0; 
+  if (line[(strlen(line) - 1)] == '&') { 
+    line[(strlen(line) - 1)] = 0; 
     return TRUE; 
   } 
   return FALSE; 
@@ -135,7 +160,6 @@ int is_output_redirection(char **args) {
 int execute_line(char *line) {
     char lineAux[ARGS_SIZE];
     strcpy(lineAux, line);
-    lineAux[(strlen(lineAux) - 1)] = 0;
     char *args[ARGS_SIZE];
     int bg = is_background(line);
     parse_args(args, line);
