@@ -138,7 +138,6 @@ int execute_line(char *line) {
     lineAux[(strlen(lineAux) - 1)] = 0;
     char *args[ARGS_SIZE];
     int bg = is_background(line);
-    //printf("%s", line);
     parse_args(args, line);
     int check = check_internal(args);
     int stdout = dup(1);
@@ -151,7 +150,6 @@ int execute_line(char *line) {
         if (bg == TRUE) {
           signal(SIGTSTP, SIG_IGN);
         }
-        printf("[execute_line() → PID Hijo: %d]\n", getpid());
         if (execvp(args[0], args) == -1) {
           fprintf(stderr, "%s\n", strerror(errno));
           //jobs_list[0].pid = 0;
@@ -163,7 +161,6 @@ int execute_line(char *line) {
       } else if (pid > 0) { // Proceso padre
         dup2(stdout, 1);
         close(stdout);
-        printf("[execute_line() → PID Padre: %d]\n", getpid());
         if (bg == TRUE) {
           jobs_list_add(pid, 'E', lineAux);
         } else {
@@ -292,16 +289,8 @@ int internal_cd(char **args) {
   int r;
   char s[180];
 
-  /* ### Línea de test - Eliminar después ### */
-  printf("Ruta anterior: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
-  /* ################################ */
-
   if (args[1]==NULL){
     r = chdir(getenv("HOME"));
-
-    /* ### Línea de test - Eliminar después ### */
-    printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
-    /* ################################ */
 
     if (r==-1){
       fprintf(stderr, "chdir: %s\n", strerror(errno));
@@ -311,10 +300,7 @@ int internal_cd(char **args) {
 
   }else{
     r = chdir(args[1]);
-    
-    /* ### Línea de test - Eliminar después ### */
-    printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
-    /* ################################ */
+
     if (r==-1){
       fprintf(stderr, "chdir: %s\n", strerror(errno));
     }
@@ -347,14 +333,8 @@ int internal_export(char **args){
     fprintf(stderr, "Error de sintaxis. Uso: export Nombre=Valor\n");
     return -1;//error
   }
-
-  printf("[internal_export()→ Esta función asignará valores a variables de entorno]\n");
-  printf("[internal_export()→ Nombre: %s]\n", nom);
-  printf("[internal_export()→ Valor: %s]\n",val);
-
-  printf("[internal_export()→ antiguo valor para %s: %s]\n", nom, getenv(nom));
+  
   setenv(nom, val, 1);     
-  printf("[internal_export()→ nuevo valor para %s: %s]\n",nom,getenv(nom) );
 
   return TRUE;
 } 
@@ -372,7 +352,6 @@ int internal_source(char **args) {
   FILE *fp;
   char str[100];
   int e;
-  printf("Función source\n");
   if (args[1]==NULL){
     fprintf(stderr, "Error de sintaxis. Uso: source <nombre_fichero>\n");
     return -1;
@@ -427,11 +406,6 @@ void reaper(int signum){
   while(pidaux>0){
     
     if(pidaux == jobs_list[0].pid){//proceso que acaba en primer plano      
-      if(WIFEXITED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con exit code %d]\n", pidaux, jobs_list[posicion].command_line, WEXITSTATUS(status));
-      }else if(WIFSIGNALED(status)){
-        fprintf(stderr,"\n[reaper()→ Proceso hijo %d en foreground (%s) finalizado con señal numero %d]\n", pidaux, jobs_list[posicion].command_line, WTERMSIG(status));
-      }
       jobs_list[0].pid = 0;
       jobs_list[0].status = 'F';
       strcpy(jobs_list[0].command_line,"\0");
@@ -439,11 +413,6 @@ void reaper(int signum){
       fflush(stdout);
     }else{
       posicion = jobs_list_find(pidaux);
-       if(WIFEXITED(status)){
-         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", pidaux,jobs_list[posicion].command_line,WEXITSTATUS(status));
-       }else if(WIFSIGNALED(status)){
-         fprintf(stderr,"\n[reaper()→ Proceso hijo %d (%s) finalizado con señal numero %d]\n", pidaux,jobs_list[posicion].command_line,WTERMSIG(status));
-       }
       if(posicion != -1){
         jobs_list_remove(posicion);
       }
@@ -461,25 +430,14 @@ void reaper(int signum){
 void ctrlc(int signum){
   signal(signum, ctrlc);
   char mensaje[1500];
-  sprintf(mensaje, "\n[ctrlc()→ Soy el proceso con PID %d, el proceso en foreground es %d]\n",getpid(),jobs_list[0].pid);
-  write(2, mensaje, strlen(mensaje));
 
   if(jobs_list[0].pid > 0){
     if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
-      if(kill(jobs_list[0].pid,SIGTERM)==0){
-        sprintf(mensaje, "\n[ctrlc()→ Señal %d enviada al proceso %d", signum,  getpid());
-        write(2, mensaje, strlen(mensaje));
-      }else{
+      if(kill(jobs_list[0].pid,SIGTERM)!=0){
         perror("kill");
         exit(-1);
       }
-    }else{
-      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
-      write(2, mensaje, strlen(mensaje));
     }
-  }else{
-    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
-    write(2, mensaje, strlen(mensaje));
   }
 }
 
@@ -542,10 +500,6 @@ void ctrlz(int signum){
         // Se añaden los datos del proceso detenido a jobs_list[n_pids]
         jobs_list_add(jobs_list[0].pid, jobs_list[0].status, jobs_list[0].command_line);
         
-        sprintf(mensaje, "\n[ctrlz()→ Soy el proceso con PID %d, el proceso en foreground es %d (%s)]",getpid(),jobs_list[0].pid, jobs_list[0].command_line);
-        write(2, mensaje, strlen(mensaje));
-        sprintf(mensaje, "\n[ctrlz()→ Señal %d (SIGTSTP) enviada al proceso %d (%s) por %d ]\n", signum, jobs_list[0].pid, jobs_list[0].command_line, getpid());
-        write(2, mensaje, strlen(mensaje));
         // Reseteo de los datos de jobs_list[0]
         jobs_list[0].pid = 0;
         strcpy(jobs_list[0].command_line,"\0");
@@ -584,8 +538,6 @@ int internal_fg(char **args){
     }
     if (jobs_list[pos].status == 'D'){
       if(kill(jobs_list[pos].pid,SIGCONT)==0){
-        sprintf(mensaje, "[internal_fg() → Señal 18 (SIGCONT) enviada al proceso %d]\n",  getpid());
-        write(2, mensaje, strlen(mensaje));
         jobs_list[pos].status = 'E';
         
         // Se borra el & del jobs_list[pos].command_line si lo tiene
@@ -634,7 +586,6 @@ int internal_bg(char **args){
         jobs_list[pos].status= 'E';
         strcat(jobs_list[pos].command_line, " &");
         if(kill(jobs_list[pos].pid,SIGCONT)==0){
-            printf("[internal_bg()→ señal 18 (SIGCONT) enviada a %d %s", getpid(), jobs_list[pos].command_line);
             printf("\n[%d] %d   %c    %s \n", pos, jobs_list[pos].pid, jobs_list[pos].status, jobs_list[pos].command_line);
         
         }else{
@@ -643,4 +594,3 @@ int internal_bg(char **args){
       }
     }
 }
-
