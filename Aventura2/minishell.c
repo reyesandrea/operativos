@@ -324,10 +324,10 @@ int check_internal(char **args) {
  *         -1: ocurrió un error durante la ejecucuón
  */
 int internal_cd(char **args) {
-  int r;
-  char s[180];
+  int r, i=2;
+  char s[180]; //*d[4] = "'/\" ", *ret;
 
-  if (args[1]==NULL){
+  if(args[1]==NULL){
     r = chdir(getenv("HOME"));
 
     if (r==-1){
@@ -337,12 +337,21 @@ int internal_cd(char **args) {
     return r == 0 ? TRUE : -1;
 
   }else{
-    r = chdir(args[1]);
+/*    if(ARGS_SIZE > 2){
+      while (args[i]!=NULL){
+        strcat(args[i-1],args[i]);
+      }
+      ##################################### FALTA CD AVANZADO
+      
+      return r;
+    }else{*/
+      r = chdir(args[1]);
 
-    if (r==-1){
-      fprintf(stderr, "chdir: %s\n", strerror(errno));
-    }
-    return r == 0 ? TRUE : -1;
+      if (r==-1){
+        fprintf(stderr, "chdir: %s\n", strerror(errno));
+      }
+      return r == 0 ? TRUE : -1;
+  //  }
   }
 
 }
