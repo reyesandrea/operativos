@@ -89,9 +89,8 @@ int is_output_redirection(char **args);
 char * obtener_prompt() {
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
-    char ESC = 27;
     static char prompt[50];
-    sprintf(prompt, "%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR"%c[0m" , ESC ,getenv("USER"),dir,PROMPT,ESC);
+    sprintf(prompt, "%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR"%c[0m" , 27 ,getenv("USER"),dir,PROMPT,27);
     return prompt;
 }
 
