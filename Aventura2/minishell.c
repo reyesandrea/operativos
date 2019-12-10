@@ -621,12 +621,14 @@ int internal_fg(char **args){
 * siga ejecutándose pero en segundo plano
 **/
 int internal_bg(char **args){
+    
     int pos = *args[1];
+    pos = pos - '0';
     if (pos >= n_pids || pos == 0) {
-         fprintf(stderr,"No exite ese trabajo");
+         fprintf(stderr,"No exite ese trabajo\n");
         return -1;
     } else if (jobs_list[pos].status== 'E'){
-        fprintf(stderr,"El trabajo ya está en segundo plano");
+        fprintf(stderr,"El trabajo ya está en segundo plano\n");
         return -1;
     } else {
         jobs_list[pos].status= 'E';
