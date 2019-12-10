@@ -126,9 +126,15 @@ char *read_line(char *line) {
   #else
   printf("%s", obtener_prompt());
   fflush(stdout);
-  fgets(line, ARGS_SIZE, stdin);
-  line[strlen(line) - 1] = 0;
-  return line;
+  if (!fgets(line, ARGS_SIZE, stdin)) {
+    printf("\r");
+       if (feof(stdin)) {
+           exit(0);
+       }
+  } else {
+    line[strlen(line) - 1] = 0;
+    return line;
+  }
   #endif
 }
 
