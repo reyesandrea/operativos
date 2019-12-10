@@ -599,9 +599,12 @@ int internal_fg(char **args){
   return TRUE;
 }
 
-
+/**
+* Función que reactivar un proceso detenido para que 
+* siga ejecutándose pero en segundo plano
+**/
 int internal_bg(char **args){
-    int pos = (int)args;
+    int pos = *args[1];
     if (pos >= n_pids || pos == 0) {
          fprintf(stderr,"No exite ese trabajo");
         return -1;
