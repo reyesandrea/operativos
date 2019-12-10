@@ -107,6 +107,10 @@ int main() {
 }
 
 
+/**
+ * Función que imprime el prompt.
+ * @param line
+ */ 
 char *read_line(char *line) {
   #ifdef USE_READLINE
   if (line_read) {
@@ -156,6 +160,12 @@ int is_output_redirection(char **args) {
   return FALSE;
 }
 
+
+/**
+ * Función que obtiene la linea fragmentada en tokens
+ * @param line
+ * @return Valor de tokens
+ */ 
 int execute_line(char *line) {
     char lineAux[ARGS_SIZE];
     strcpy(lineAux, line);
@@ -451,7 +461,7 @@ void reaper(int signum){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlc(int signum){
-  signal(signum, ctrlc);
+  signal(SIGINT, ctrlc);
   char mensaje[1500];
 
   if(jobs_list[0].pid > 0){
@@ -461,13 +471,15 @@ void ctrlc(int signum){
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
+      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
+    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
+  printf("\n");
+  fflush(stdout);
 }
 
 
