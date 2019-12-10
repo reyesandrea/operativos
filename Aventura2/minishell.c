@@ -90,7 +90,7 @@ char * obtener_prompt() {
     char dir [ARGS_SIZE];
     getcwd(dir, ARGS_SIZE);
     static char prompt[50];
-    sprintf(prompt, "%c[1m"VERDE_T"%s:~"AZUL_T"%s"ROJO_T"%c "RESET_COLOR"%c[0m" , 27 ,getenv("USER"),dir,PROMPT,27);
+    sprintf(prompt, "%c[1m"AMARILLO_T"%s:~"ROJO_T"%s"MAGENTA_T"%c "RESET_COLOR"%c[0m" , 27 ,getenv("USER"),dir,PROMPT,27);
     return prompt;
 }
 
