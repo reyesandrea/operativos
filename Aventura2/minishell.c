@@ -76,8 +76,7 @@ void reaper(int signum);
 void ctrlc(int signum);
 int jobs_list_add(pid_t pid, char status, char *command_line);
 int jobs_list_find(pid_t pid);
-int  jobs_list_remove(int pos);
-void reaper(int signum);
+int jobs_list_remove(int pos);
 int internal_jobs();
 void ctrlz(int signum);
 int internal_fg(char **args);
@@ -168,7 +167,7 @@ int is_output_redirection(char **args) {
 
 
 /**
- * Función que obtiene la linea fragmentada en tokens
+ * Función que obtiene la línea fragmentada en tokens
  * @param line
  * @return Valor de tokens
  */ 
@@ -430,13 +429,17 @@ int internal_jobs(char **args) {
 }
 
 
-/*
-Al igual que en la nivel anterior, el enterrador controlará si el hijo que acaba es el que se ejecuta en primer plano 
-(waitpid() devuelve el pid del hijo que ha terminado), y en tal caso reseteará los datos de jobs_list[0].pid, pero en 
-caso de ser background llamará a la función  jobs_list_find() para buscar el PID del proceso que ha acabado en la lista 
-de trabajos, imprimirá por la salida estándard de errores que ese proceso ha terminado (indicando los datos del mismo) y 
-llamará a la función jobs_list_remove() para eliminar el proceso de la lista
-*/
+/**
+ * Función que controla si el hijo que acaba es el que se ejecuta en primer plano 
+ * (waitpid() devuelve el pid del hijo que ha terminado) y, en tal caso, reseteará 
+ * los datos de jobs_list[0].pid. En caso de estar en background, llamará a la
+ * función  jobs_list_find() para buscar en la lista de trabajos el PID del proceso 
+ * que ha acabado.
+ * Imprime por la salida estándard de errores que ese proceso ha terminado (indicando 
+ * los datos del mismo) y llama a la función jobs_list_remove() para eliminar el 
+ * proceso de la lista.
+ * @param: signum
+ **/
 void reaper(int signum){
   int status, posicion=0;
   signal(SIGCHLD,reaper);
@@ -467,6 +470,7 @@ void reaper(int signum){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlc(int signum){
+  printf("\n");
   signal(SIGINT, ctrlc);
   char mensaje[1500];
 
@@ -477,18 +481,23 @@ void ctrlc(int signum){
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]", SIGTERM, signum);
+      sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTERM, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "\n[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]", SIGTERM, getpid());
+    sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
   }
-  printf("\n");
   fflush(stdout);
 }
 
 
+/**
+ * Función que elimina un trabajo y mueve el 
+ * registro del último proceso de la lista a la posición 
+ * del que eliminamos. Decrementamos la variable global n_pids.
+ * @param pos: posición del trabajo
+ */
 int jobs_list_remove(int pos){
     jobs_list[pos].pid = jobs_list[n_pids-1].pid;
     jobs_list[pos].status = jobs_list[n_pids-1].status;
@@ -497,6 +506,14 @@ int jobs_list_remove(int pos){
     n_pids--;
 }
 
+
+/**
+ * Función que añade un nuevo elemento al array en la posición
+ * indicada por la variable global n_pids.
+ * @param pid del elemento a añadir
+ *        status del elemento a añadir
+ *        command_line del elemento a añadir
+ */
 int jobs_list_add(pid_t pid, char status, char *command_line){
   if(n_pids<ARGS_SIZE){
     n_pids++;
@@ -536,6 +553,7 @@ int jobs_list_find(pid_t pid){
  * @param signum: número que identifica la señal recibida
  **/
 void ctrlz(int signum){
+  printf("\n");
   signal(signum, ctrlz);
   char mensaje[1500];
   if(jobs_list[0].pid > 0){
@@ -556,13 +574,14 @@ void ctrlz(int signum){
         exit(-1);
       }
     }else{
-      sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
+      sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que el proceso en el foreground es el shell]\n", SIGTSTP, signum);
       write(2, mensaje, strlen(mensaje));
     }
   }else{
-    sprintf(mensaje, "\n[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
+    sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
     write(2, mensaje, strlen(mensaje));
   }
+  fflush(stdout);
 }
 
 
@@ -587,8 +606,6 @@ int internal_fg(char **args){
     if (jobs_list[pos].status == 'D'){
       if(kill(jobs_list[pos].pid,SIGCONT)==0){
         jobs_list[pos].status = 'E';
-        
-        printf("Command line joblistpos: %s \n", jobs_list[pos].command_line);
     
         const char s[2] = "&";
         
@@ -598,7 +615,8 @@ int internal_fg(char **args){
         jobs_list[0].status = jobs_list[pos].status;
 
         jobs_list_remove(pos);
-        printf("Command line luego de hacer remove: %s \n", jobs_list[0].command_line);
+        printf("[internal_fg() → Señal %d (SIGCONT) enviada a %d (%s)] \n", SIGCONT, jobs_list[0].pid,jobs_list[0].command_line);
+        printf("%s\n", jobs_list[0].command_line);
         
       }else{
         perror("kill");
@@ -622,23 +640,23 @@ int internal_fg(char **args){
 **/
 int internal_bg(char **args){
     
-    int pos = *args[1];
-    pos = pos - '0';
-    if (pos >= n_pids || pos == 0) {
-         fprintf(stderr,"No exite ese trabajo\n");
-        return -1;
-    } else if (jobs_list[pos].status== 'E'){
-        fprintf(stderr,"El trabajo ya está en segundo plano\n");
-        return -1;
-    } else {
-        jobs_list[pos].status= 'E';
-        strcat(jobs_list[pos].command_line, " &");
-        if(kill(jobs_list[pos].pid,SIGCONT)==0){
-            printf("\n[%d] %d   %c    %s \n", pos, jobs_list[pos].pid, jobs_list[pos].status, jobs_list[pos].command_line);
-        
-        }else{
-            perror("kill");
-            return -1;
-      }
+  int pos = *args[1];
+  pos = pos - '0';
+  if (pos >= n_pids || pos == 0) {
+        fprintf(stderr,"No exite ese trabajo\n");
+      return -1;
+  } else if (jobs_list[pos].status== 'E'){
+      fprintf(stderr,"El trabajo ya está en segundo plano\n");
+      return -1;
+  } else {
+      jobs_list[pos].status= 'E';
+      strcat(jobs_list[pos].command_line, " &");
+      if(kill(jobs_list[pos].pid,SIGCONT)==0){
+          printf("\n[%d] %d   %c    %s \n", pos, jobs_list[pos].pid, jobs_list[pos].status, jobs_list[pos].command_line);
+      
+      }else{
+          perror("kill");
+          return -1;
     }
+  }
 }
