@@ -554,6 +554,7 @@ void ctrlz(int signum){
  * @param args: line
  **/
 int internal_fg(char **args){
+  
   int pos = *args[1];
   pos = pos - '0';
   char mensaje[1500], *line, *esp=" ";
@@ -570,11 +571,10 @@ int internal_fg(char **args){
         jobs_list[pos].status = 'E';
         
         printf("Command line joblistpos: %s \n", jobs_list[pos].command_line);
-        // Se borra el & del jobs_list[pos].command_line si lo tiene
-        char *args[ARGS_SIZE];
-        parse_args(args, jobs_list[pos].command_line);
-        strcat(args[0],args[1]);
-        strcpy(jobs_list[0].command_line,args[0]);
+    
+        const char s[2] = "&";
+        
+        strcpy(jobs_list[0].command_line, strtok(jobs_list[pos].command_line, s));
 
         jobs_list[0].pid = jobs_list[pos].pid;
         jobs_list[0].status = jobs_list[pos].status;
