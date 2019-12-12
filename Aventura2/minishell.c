@@ -496,6 +496,11 @@ void ctrlc(int signum){
   }else{
     sprintf(mensaje, "[ctrlc()→ Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTERM, getpid());
     write(2, mensaje, strlen(mensaje));
+    #ifdef USE_READLINE
+           printf("\n%s", obtener_prompt());
+       #else
+           printf("\n");
+    #endif
   }
   fflush(stdout);
 }
@@ -589,6 +594,11 @@ void ctrlz(int signum){
   }else{
     sprintf(mensaje, "[ctrlz() → Error: Señal %d no enviada por %d debido a que no hay ningún proceso en foreground]\n", SIGTSTP, getpid());
     write(2, mensaje, strlen(mensaje));
+    #ifdef USE_READLINE
+           printf("\n%s", obtener_prompt());
+       #else
+           printf("\n");
+    #endif
   }
   fflush(stdout);
 }
