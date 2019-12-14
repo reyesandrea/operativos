@@ -65,7 +65,6 @@ int internal_cd(char **args);
 int internal_export(char **args); 
 int internal_source(char **args); 
 int internal_jobs(char **args); 
-int internal_cd(char **args); 
 void reaper(int signum);
 void ctrlc(int signum);
 int jobs_list_add(pid_t pid, char status, char *command_line);
@@ -289,8 +288,8 @@ int check_internal(char **args) {
  *         -1: ocurrió un error durante la ejecucuón
  */
 int internal_cd(char **args) {
-  int r;
-  char s[180];
+  int r, i=2;
+  char s[180], *aux, *ruta, *delim = "'\\\"";
 
   /* ### Línea de test - Eliminar después ### */
   printf("Ruta anterior: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
@@ -310,17 +309,53 @@ int internal_cd(char **args) {
     return r == 0 ? TRUE : -1;
 
   }else{
-    r = chdir(args[1]);
-    
-    /* ### Línea de test - Eliminar después ### */
-    printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
-    /* ################################ */
-    if (r==-1){
-      fprintf(stderr, "chdir: %s\n", strerror(errno));
-    }
-    return r == 0 ? TRUE : -1;
-  }
 
+    if(args[2] != NULL){ // cd avanzado
+      /* Reserva de memoria para aux, que es donde se
+         almacenará la concatenación de los tokens */
+      if(!(aux = (char *) malloc(COMMAND_LINE_SIZE))) return -1; 
+      strcpy(aux, args[1]);
+   
+      while (args[i]!=NULL) { // Concatenación de tokens
+        strcat(aux, " ");
+        strcat(aux, args[i]);
+        i++;
+      }
+
+      /* Reserva de memoria para ruta, que es donde se
+         almacenará la nueva ruta sin caracteres no deseados */
+      if (!(ruta = malloc(COMMAND_LINE_SIZE))) return -1;
+      char *str = strtok(aux, delim);
+
+      while (str!=NULL) {
+        ruta = strcat(ruta, str);
+        str = strtok(NULL,delim);
+      }
+    
+      r = chdir(ruta);  
+
+      // Liberar espacio reservado      
+      free(aux);    
+      free(ruta);
+
+      printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
+      if (r==-1){
+        fprintf(stderr, "chdir: %s\n", strerror(errno));
+      }
+      return r == 0 ? TRUE : -1;
+
+    }else{
+      r = chdir(args[1]);
+
+      /* ### Línea de test - Eliminar después ### */
+      printf("Ruta actual: [internal_cd() → %s] \n", getcwd(s,sizeof(s)));
+      /* ################################ */
+      if (r==-1){
+        fprintf(stderr, "chdir: %s\n", strerror(errno));
+      }
+      return r == 0 ? TRUE : -1;
+    }
+  }
 }
 
 
@@ -412,13 +447,17 @@ int internal_jobs(char **args) {
 }
 
 
-/*
-Al igual que en la nivel anterior, el enterrador controlará si el hijo que acaba es el que se ejecuta en primer plano 
-(waitpid() devuelve el pid del hijo que ha terminado), y en tal caso reseteará los datos de jobs_list[0].pid, pero en 
-caso de ser background llamará a la función  jobs_list_find() para buscar el PID del proceso que ha acabado en la lista 
-de trabajos, imprimirá por la salida estándard de errores que ese proceso ha terminado (indicando los datos del mismo) y 
-llamará a la función jobs_list_remove() para eliminar el proceso de la lista
-*/
+/**
+ * Función que controla si el hijo que acaba es el que se ejecuta en primer plano 
+ * (waitpid() devuelve el pid del hijo que ha terminado) y, en tal caso, reseteará 
+ * los datos de jobs_list[0].pid. En caso de estar en background, llamará a la
+ * función  jobs_list_find() para buscar en la lista de trabajos el PID del proceso 
+ * que ha acabado.
+ * Imprime por la salida estándard de errores que ese proceso ha terminado (indicando 
+ * los datos del mismo) y llama a la función jobs_list_remove() para eliminar el 
+ * proceso de la lista.
+ * @param: signum
+ **/
 void reaper(int signum){
   int status, posicion=0;
   signal(SIGCHLD,reaper);
@@ -571,9 +610,10 @@ void ctrlz(int signum){
  * @param args: line
  **/
 int internal_fg(char **args){
+  
   int pos = *args[1];
   pos = pos - '0';
-  char mensaje[1500], *line;
+  char mensaje[1500], *line, *esp=" ";
   if(args[1] == NULL){  // Chequeo de sintaxis
     fprintf(stderr, "[internal_fg() → Error de sintaxis. Uso: fg nº_de_trabajo]\n");
     return -1; //error
@@ -584,26 +624,18 @@ int internal_fg(char **args){
     }
     if (jobs_list[pos].status == 'D'){
       if(kill(jobs_list[pos].pid,SIGCONT)==0){
-        sprintf(mensaje, "[internal_fg() → Señal 18 (SIGCONT) enviada al proceso %d]\n",  getpid());
-        write(2, mensaje, strlen(mensaje));
         jobs_list[pos].status = 'E';
+    
+        const char s[2] = "&";
         
-        // Se borra el & del jobs_list[pos].command_line si lo tiene
-        char *args[ARGS_SIZE];
-        parse_args(args, jobs_list[pos].command_line);
-        if (args[2]!=NULL){
-          args[2] = NULL;
-          strcat(args[0],args[1]);
-          strcpy(jobs_list[0].command_line,args[0]);
-        }else{
-          strcpy(jobs_list[0].command_line,jobs_list[pos].command_line);
-        }
+        strcpy(jobs_list[0].command_line, strtok(jobs_list[pos].command_line, s));
 
         jobs_list[0].pid = jobs_list[pos].pid;
         jobs_list[0].status = jobs_list[pos].status;
 
         jobs_list_remove(pos);
-        printf("Command line luego de hacer remove: %s \n", jobs_list[0].command_line);
+        printf("[internal_fg() → Señal %d (SIGCONT) enviada a %d (%s)] \n", SIGCONT, jobs_list[0].pid,jobs_list[0].command_line);
+        printf("%s\n", jobs_list[0].command_line);
         
       }else{
         perror("kill");
@@ -614,16 +646,19 @@ int internal_fg(char **args){
       write(2, mensaje, strlen(mensaje));
       return -1;
     }
+  }
     while(jobs_list[0].pid>0){
-      pause();
-    }
+    pause();
   }
   return TRUE;
 }
 
-
+/**
+* Función que reactivar un proceso detenido para que 
+* siga ejecutándose pero en segundo plano
+**/
 int internal_bg(char **args){
-    int pos = (int)args;
+    int pos = *args[1];
     if (pos >= n_pids || pos == 0) {
          fprintf(stderr,"No exite ese trabajo");
         return -1;

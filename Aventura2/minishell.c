@@ -71,7 +71,6 @@ int internal_cd(char **args);
 int internal_export(char **args); 
 int internal_source(char **args); 
 int internal_jobs(char **args); 
-int internal_cd(char **args); 
 void reaper(int signum);
 void ctrlc(int signum);
 int jobs_list_add(pid_t pid, char status, char *command_line);
@@ -325,9 +324,9 @@ int check_internal(char **args) {
  */
 int internal_cd(char **args) {
   int r, i=2;
-  char s[180]; //*d[4] = "'/\" ", *ret;
+  char s[180], *aux, *ruta, *delim = "'\\\"";
 
-  if(args[1]==NULL){
+  if (args[1]==NULL){
     r = chdir(getenv("HOME"));
 
     if (r==-1){
@@ -337,24 +336,52 @@ int internal_cd(char **args) {
     return r == 0 ? TRUE : -1;
 
   }else{
-/*    if(ARGS_SIZE > 2){
-      while (args[i]!=NULL){
-        strcat(args[i-1],args[i]);
+
+    if(args[2] != NULL){ // cd avanzado
+    
+      /* Reserva de memoria para aux, que es donde se
+         almacenará la concatenación de los tokens */
+      if(!(aux = (char *) malloc(COMMAND_LINE_SIZE))) return -1; 
+      strcpy(aux, args[1]);
+   
+      while (args[i]!=NULL) { // Concatenación de tokens
+        strcat(aux, " ");
+        strcat(aux, args[i]);
+        i++;
       }
-      ##################################### FALTA CD AVANZADO
-      
-      return r;
-    }else{*/
+
+      /* Reserva de memoria para ruta, que es donde se
+         almacenará la nueva ruta sin caracteres no deseados */
+      if (!(ruta = malloc(COMMAND_LINE_SIZE))) return -1;
+      char *str = strtok(aux, delim);
+
+      while (str!=NULL) {
+        ruta = strcat(ruta, str);
+        str = strtok(NULL,delim);
+      }
+    
+      r = chdir(ruta);  
+
+      // Liberar espacio reservado      
+      free(aux);    
+      free(ruta);
+
+      if (r==-1){
+        fprintf(stderr, "chdir: %s\n", strerror(errno));
+      }
+      return r == 0 ? TRUE : -1;
+
+    }else{
       r = chdir(args[1]);
 
       if (r==-1){
         fprintf(stderr, "chdir: %s\n", strerror(errno));
       }
       return r == 0 ? TRUE : -1;
-  //  }
+    }
   }
-
 }
+
 
 
 /**
