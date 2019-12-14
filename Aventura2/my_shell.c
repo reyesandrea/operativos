@@ -511,7 +511,7 @@ void ctrlc(int signum){
   char mensaje[1500];
 
   if(jobs_list[0].pid > 0){
-    if(strcmp(jobs_list[0].command_line, "./minishell") != 0) {
+    if(strcmp(jobs_list[0].command_line, "./my_shell") != 0) {
       if(kill(jobs_list[0].pid,SIGTERM)!=0){
         perror("kill");
         exit(-1);
