@@ -31,7 +31,7 @@
 #include <stdbool.h>
 #include <fcntl.h>
 
-#pragma region //COLORES (Eliminar los que no se usen)
+#pragma region //COLORES
 #define RESET_COLOR    "\x1b[0m"
 #define NEGRO_T        "\x1b[30m"
 #define NEGRO_F        "\x1b[40m"
