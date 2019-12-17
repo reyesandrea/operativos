@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
        exit(EXIT_FAILURE);
    } 
    int length = my_stack_len(pila);
-   pila = my_stack_read(argv[1]);
    //Comprobar que la pila contenga 
    if (length<=0){
    printf("Stack with 0 elements\n");
