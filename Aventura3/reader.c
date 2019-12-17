@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
    int length = my_stack_len(pila);
    pila = my_stack_read(argv[1]);
    if (pila == NULL) {
-       printf("Couldn't open stack\n");
+       printf("Couldn't open stack file %s \n",argv[1]);
        return 0;
    }
    printf("Stack length: %d\n", length);

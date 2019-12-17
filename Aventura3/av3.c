@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     pila = my_stack_read(argv[1]);
+    printf("Threads: %d, Iterations: %d \n", NUM_THREADS, N);
     pthread_t ids[NUM_THREADS];
     printf("Initial stack length: %d\n", (pila != NULL) ? my_stack_len(pila) : 0);
     if (pila == NULL) { // Crear pila si el archivo no la contiene
