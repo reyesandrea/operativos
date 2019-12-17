@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
        printf("Stack with 0 elements\n");
        return 0;
    }
-   
+
    printf("Stack length: %d\n", length);
    int suma = 0, min = INT_MAX, max = 0;
    for (int i = 0; i < length; i++) {
