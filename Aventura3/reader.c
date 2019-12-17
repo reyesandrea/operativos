@@ -8,22 +8,21 @@ int main(int argc, char *argv[]) {
        return 0;
    }
    struct my_stack *pila = my_stack_read(argv[1]);
+   
    //Comprobar si la pila existe
    if (!pila) {
-       puts("\n");
+       printf("Couldn't open stack file %s \n",argv[1]);
        exit(EXIT_FAILURE);
    } 
    int length = my_stack_len(pila);
    pila = my_stack_read(argv[1]);
+   
    //Comprobar que la pila contenga 
    if (length<=0){
-   printf("Stack with 0 elements\n");
-   return 0;
-   }
-   if (pila == NULL) {
-       printf("Couldn't open stack file %s \n",argv[1]);
+       printf("Stack with 0 elements\n");
        return 0;
    }
+   
    printf("Stack length: %d\n", length);
    int suma = 0, min = INT_MAX, max = 0;
    for (int i = 0; i < length; i++) {
