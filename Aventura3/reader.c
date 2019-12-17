@@ -1,3 +1,12 @@
+/*
+    ### AVENTURA 3 ###
+    Squad: LRAOS
+    Miembros: 
+        Camino, Lluís 
+        López, Rubén
+        Reyes, Andrea
+*/
+
 #include <stdio.h>
 #include <limits.h>
 #include "my_lib.h"
@@ -21,17 +30,16 @@ int main(int argc, char *argv[]) {
    //Comprobar si la pila contiene menos de 10 elementos 
    if (length<10){
        printf("Stack with less than 10 elements\n");
-       return 0;
    }
     
    //Si la pila tine mas de 10 elementos avisar
    if(length>10){
-   printf("La pila tiene más de 10 elementos, se procederá a leer los 10 primeros\n");
+       printf("La pila tiene más de 10 elementos, se procederá a leer los 10 primeros\n");
    }
 
    printf("Stack length: %d\n", length);
    int suma = 0, min = INT_MAX, max = 0;
-   for (int i = 0; i < 10 || i < 10; i++) {
+   for (int i = 0; i < 10; i++) {
        int *pop = my_stack_pop(pila);
        printf("%d \n", *pop);
        suma += *pop;

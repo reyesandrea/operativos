@@ -1,3 +1,12 @@
+/*
+    ### AVENTURA 3 ###
+    Squad: LRAOS
+    Miembros: 
+        Camino, Lluís 
+        López, Rubén
+        Reyes, Andrea
+*/
+
 #include <stdio.h>
 #include <pthread.h>
 #include "my_lib.h"

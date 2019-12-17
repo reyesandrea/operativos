@@ -1,3 +1,12 @@
+/*
+    ### AVENTURA 1 ###
+    Squad: LRAOS
+    Miembros: 
+        Camino, Lluís 
+        López, Rubén
+        Reyes, Andrea
+*/
+
 /* lib.h librería con las funciones equivalentes a las
 de <string.h> y las funciones y estructuras para el
 manejo de una pila */
