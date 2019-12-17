@@ -23,9 +23,15 @@ int main(int argc, char *argv[]) {
        return 0;
    }
 
+   //Comprobar si la pila contiene menos de 10 elementos 
+   if (length<10){
+       printf("Stack with less than 10 elements\n");
+       return 0;
+   }
+
    printf("Stack length: %d\n", length);
    int suma = 0, min = INT_MAX, max = 0;
-   for (int i = 0; i < length; i++) {
+   for (int i = 0; i < length || i < 10; i++) {
        int *pop = my_stack_pop(pila);
        printf("%d \n", *pop);
        suma += *pop;
