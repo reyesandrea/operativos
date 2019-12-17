@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     printf("Final stack length: %d\n", my_stack_len(pila));
     for (int i = 0; i < NUM_THREADS; i++) { // Crear NUM_THREADS hilos
         pthread_create(&ids[i], NULL, func, NULL);
-        printf("Thread %d created\n", (int) ids[i]);
+        printf("%d) Thread %d created\n", i, (int) ids[i]);
     }
     for (int i = 0; i < NUM_THREADS; i++) { // Esperar a que acaben todos los hilos
         pthread_join(ids[i], NULL); 
